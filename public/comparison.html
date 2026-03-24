@@ -602,6 +602,22 @@
     margin-top: 2px;
   }
 
+  .tool-missing-list {
+    list-style: none;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px dashed var(--border);
+  }
+
+  .tool-missing-list li {
+    padding: 6px 0;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-light);
+  }
+
   /* ===== Mock UI ===== */
   .mock-ui {
     background: #f0f4f8;
@@ -732,6 +748,35 @@
   .mock-mobile-row .key { color: var(--text-light); }
   .mock-mobile-row .val { font-weight: 600; }
 
+  /* ===== Stats Banner ===== */
+  .stats-banner {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 32px 0;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--rit-bg), #fff);
+    border: 1px solid var(--rit-border);
+  }
+
+  .stat-item .stat-num {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--rit-accent);
+    line-height: 1.2;
+  }
+
+  .stat-item .stat-label {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
   /* ===== Summary Section ===== */
   #summary {
     background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
@@ -844,6 +889,8 @@
 
     .mock-dashboard { grid-template-columns: repeat(3, 1fr); }
     .mock-kanban { grid-template-columns: repeat(2, 1fr); }
+
+    .stats-banner { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 600px) {
@@ -918,6 +965,11 @@
     }
 
     .card:hover, .tool-card:hover { transform: none; box-shadow: none; }
+
+    .stat-item {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
   }
 </style>
 </head>
@@ -992,6 +1044,10 @@
           <span class="label-key">技術レベル</span>
           <span class="label-val">ノーコード（AppSheet）ベース</span>
         </li>
+        <li>
+          <span class="label-key">API連携</span>
+          <span class="label-val">約5サービス（TaxSys経由のfreee/MF等）</span>
+        </li>
       </ul>
     </div>
 
@@ -1024,13 +1080,33 @@
         </li>
         <li>
           <span class="label-key">基盤技術</span>
-          <span class="label-val">Next.js + Supabase + AI分析</span>
+          <span class="label-val">Next.js + Supabase + AI分析（14画面の本格SaaS）</span>
         </li>
         <li>
           <span class="label-key">技術レベル</span>
           <span class="label-val">本格SaaS開発（freee/MF直接API連携）</span>
         </li>
+        <li>
+          <span class="label-key">API連携</span>
+          <span class="label-val">17サービス直接連携</span>
+        </li>
       </ul>
+
+      <!-- Rit Stats Banner -->
+      <div class="stats-banner">
+        <div class="stat-item">
+          <div class="stat-num">14</div>
+          <div class="stat-label">画面数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">24</div>
+          <div class="stat-label">ナレッジ本数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">17</div>
+          <div class="stat-label">API連携数</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1130,22 +1206,28 @@
               <td colspan="3" style="text-align:center;font-weight:800;color:var(--text-light)">要検討</td>
             </tr>
             <tr>
-              <td>CRM・タスク管理</td>
+              <td>CRM・タスク管理・記帳OCR</td>
               <td style="color:var(--green)">&#9679;</td>
               <td style="color:var(--green)">&#9679;</td>
               <td style="color:var(--green)">&#9679;</td>
             </tr>
             <tr>
-              <td>freee/MF連携</td>
+              <td>freee/MF/弥生連携</td>
               <td style="color:var(--green)">&#9679;</td>
               <td style="color:var(--green)">&#9679;</td>
               <td style="color:var(--green)">&#9679;</td>
             </tr>
             <tr>
-              <td>アカウント数</td>
-              <td>3まで</td>
-              <td>10まで</td>
-              <td>無制限</td>
+              <td>ナレッジ管理（3層構造）</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>補助金ポータル</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
             </tr>
             <tr>
               <td>クライアントポータル</td>
@@ -1154,7 +1236,13 @@
               <td style="color:var(--green)">&#9679;</td>
             </tr>
             <tr>
-              <td>AI分析・レポート</td>
+              <td>AI分析・自動学習</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>給与・労務連携</td>
               <td style="color:var(--gray)">&#10005;</td>
               <td style="color:var(--green)">&#9679;</td>
               <td style="color:var(--green)">&#9679;</td>
@@ -1173,6 +1261,12 @@
             </tr>
             <tr>
               <td>LP制作・SEO支援</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>e-Tax/eLTAX連携</td>
               <td style="color:var(--gray)">&#10005;</td>
               <td style="color:var(--gray)">&#10005;</td>
               <td style="color:var(--green)">&#9679;</td>
@@ -1351,6 +1445,123 @@
           <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
         </tr>
 
+        <!-- Knowledge Management (NEW) -->
+        <tr class="rit-win">
+          <td rowspan="3">ナレッジ管理</td>
+          <td>3層ナレッジ構造</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">システム共通/事務所/企業別</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>AI自動ルール学習</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">過去データから仕訳ルール自動生成</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>税法・制度ナレッジDB</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">24本の完全ガイド</span></div></td>
+        </tr>
+
+        <!-- Subsidy Portal (NEW) -->
+        <tr class="rit-win">
+          <td rowspan="2">補助金ポータル</td>
+          <td>補助金・支援制度検索</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">フィルター+顧問先案内機能</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>自治体別制度情報</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">地域・業種・規模フィルター</span></div></td>
+        </tr>
+
+        <!-- Payroll/Labor (NEW) -->
+        <tr class="rit-win">
+          <td rowspan="2">給与・労務連携</td>
+          <td>freee人事労務</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">給与明細/年末調整/勤怠</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>MFクラウド給与</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">対応予定</span></div></td>
+        </tr>
+
+        <!-- Invoice/Expense (NEW) -->
+        <tr class="rit-win">
+          <td rowspan="2">請求・経費連携</td>
+          <td>MFクラウド請求書</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">請求書/見積書/納品書</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>MFクラウド経費</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">対応予定</span></div></td>
+        </tr>
+
+        <!-- Public API (NEW) -->
+        <tr>
+          <td rowspan="2">公的API</td>
+          <td>インボイス番号検証</td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">TaxSys内蔵</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">国税庁API直接連携</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>法人番号検索</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">国税庁API</span></div></td>
+        </tr>
+
+        <!-- Tax Filing (NEW) -->
+        <tr class="rit-win">
+          <td rowspan="2">税務申告連携</td>
+          <td>e-Tax連携</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">XBRL形式対応</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>eLTAX連携</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">対応予定</span></div></td>
+        </tr>
+
+        <!-- Communication (NEW) -->
+        <tr class="rit-win">
+          <td rowspan="3">コミュニケーション<br>連携</td>
+          <td>ChatWork連携</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">メッセージ/タスク/通知</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>Slack連携</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">通知/ワークフロー</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>LINE WORKS連携</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">対応予定</span></div></td>
+        </tr>
+
+        <!-- Bookkeeping (NEW) -->
+        <tr class="rit-win">
+          <td>記帳連携</td>
+          <td>STREAMED連携</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">CSV連携</span></div></td>
+        </tr>
+
+        <!-- Client My Page (NEW) -->
+        <tr class="rit-win">
+          <td>企業専用ページ</td>
+          <td>顧問先のマイページ</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">進捗/書類提出/メッセージ/<br>請求書/ルール確認/補助金情報</span></div></td>
+        </tr>
+
         <!-- Education -->
         <tr class="solabo-win">
           <td rowspan="3">教育</td>
@@ -1468,34 +1679,42 @@
         <ul class="strength-list">
           <li>
             <span class="bullet">1</span>
-            <span><strong>ツール自体の完成度</strong> &#8212; AppSheet（ノーコード）vs 本格SaaS開発。UI/UX、拡張性、パフォーマンスで圧倒的な差</span>
+            <span><strong>Next.js本格開発（14画面）</strong> &#8212; AppSheet（ノーコード）vs プロダクション品質のSaaS。UI/UX、拡張性、パフォーマンスで圧倒的な差</span>
           </li>
           <li>
             <span class="bullet">2</span>
-            <span><strong>freee/MF直接API連携</strong> &#8212; TaxSys経由ではなく直接連携。データのリアルタイム性と信頼性が高い</span>
+            <span><strong>17サービスのAPI連携</strong> &#8212; freee会計/人事労務、MF会計/給与/請求書/経費、弥生Misoca、クラウドサイン等。so-laboは約5サービス</span>
           </li>
           <li>
             <span class="bullet">3</span>
-            <span><strong>クライアントポータル</strong> &#8212; so-laboにない最大の差別化ポイント。顧問先との書類・メッセージのやり取りを一元化</span>
+            <span><strong>クライアントポータル</strong> &#8212; so-laboにない最大の差別化。顧問先との書類・メッセージ・進捗・請求書・ルール確認・補助金情報を一元化</span>
           </li>
           <li>
             <span class="bullet">4</span>
-            <span><strong>AI分析・自動レポート生成</strong> &#8212; 収益分析、リスクアラート、顧問料適正化提案。データドリブンな経営支援</span>
+            <span><strong>3層ナレッジ管理</strong> &#8212; システム共通/事務所独自ルール/企業別ルールの3層構造。24本の税務ナレッジDB（法人税法〜補助金申請実務）</span>
           </li>
           <li>
             <span class="bullet">5</span>
-            <span><strong>初期費用0円</strong> &#8212; so-laboは15万円の初期費用が必要。導入のハードルが全く違う</span>
+            <span><strong>AI自動学習</strong> &#8212; 過去の帳票データから仕訳ルールを自動生成。使うほど賢くなるシステム</span>
           </li>
           <li>
             <span class="bullet">6</span>
-            <span><strong>モダンなUI/UX</strong> &#8212; プロフェッショナルなSaaSの見た目。若い税理士・スタッフに響く</span>
+            <span><strong>補助金・支援制度ポータル</strong> &#8212; 地域・業種・規模フィルターで検索、顧問先への案内機能付き</span>
           </li>
           <li>
             <span class="bullet">7</span>
-            <span><strong>請求管理の内蔵</strong> &#8212; CRM + 請求が一体化。so-laboでは別ツールが必要</span>
+            <span><strong>国税庁API連携</strong> &#8212; インボイス番号検証/法人番号検索をAPI直接連携</span>
           </li>
           <li>
             <span class="bullet">8</span>
+            <span><strong>AI分析・自動レポート生成</strong> &#8212; 収益分析、リスクアラート、顧問料適正化提案。データドリブンな経営支援</span>
+          </li>
+          <li>
+            <span class="bullet">9</span>
+            <span><strong>請求管理の内蔵</strong> &#8212; CRM + 請求が一体化。so-laboでは別ツールが必要</span>
+          </li>
+          <li>
+            <span class="bullet">10</span>
             <span><strong>DM送付機能</strong> &#8212; 既にRitポータルで実装済み。顧問先への一斉連絡が簡単</span>
           </li>
         </ul>
@@ -1507,7 +1726,7 @@
 <!-- Section 5: Tool Comparison -->
 <section id="tools">
   <h2 class="section-title">ツール画面比較</h2>
-  <p class="section-subtitle">TaxSys（AI-OCR特化）vs Rit TAX PARTNER（統合プラットフォーム）</p>
+  <p class="section-subtitle">TaxSys（AI-OCR特化）vs Rit TAX PARTNER（14画面の統合プラットフォーム）</p>
   <div class="section-divider"></div>
 
   <div class="tool-comparison">
@@ -1515,30 +1734,71 @@
     <div class="tool-card solabo">
       <div class="tool-header">TaxSys（so-labo）</div>
       <div class="tool-body">
+        <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:16px;font-weight:600">TaxSysの実機能（マニュアルから逆算）</p>
         <ul class="tool-feature-list">
           <li>
             <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
-            <span><strong>AI-OCR記帳特化</strong> &#8212; 領収書・請求書の読取りに特化したツール</span>
+            <span><strong>顧問先管理</strong> &#8212; 基本的な顧客情報の管理</span>
           </li>
           <li>
             <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
-            <span><strong>Gemini 3.0搭載</strong> &#8212; 高速・高精度なOCR処理</span>
+            <span><strong>AI-OCR記帳</strong> &#8212; Gemini 3.0搭載の領収書・請求書読取り</span>
           </li>
           <li>
             <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
-            <span><strong>Google Drive統合</strong> &#8212; ファイル管理はGoogle Driveベース</span>
-          </li>
-          <li>
-            <span class="feat-icon" style="color:var(--yellow)">&#9888;</span>
-            <span><strong>クレジット制</strong> &#8212; 月3,000〜5,000クレジットの上限あり</span>
+            <span><strong>証憑自動振り分け</strong> &#8212; アップロードした証憑を自動分類</span>
           </li>
           <li>
             <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
-            <span><strong>仕訳データ連携</strong> &#8212; freee/MFへの仕訳データ出力</span>
+            <span><strong>重複チェック・突合チェック</strong> &#8212; 二重入力や不整合を検知</span>
           </li>
           <li>
             <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
-            <span><strong>スプレッドシート出力</strong> &#8212; データ加工はスプレッドシートで</span>
+            <span><strong>インボイス番号検証</strong> &#8212; 適格請求書番号の自動確認</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
+            <span><strong>ダッシュボード</strong> &#8212; 基本的な集計・状況確認</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
+            <span><strong>freee/MF/弥生連携</strong> &#8212; 仕訳データの出力連携</span>
+          </li>
+        </ul>
+
+        <!-- TaxSysにない機能 -->
+        <ul class="tool-missing-list">
+          <li>
+            <span style="color:#dc2626;font-weight:800;font-size:0.9rem">&#10005;</span>
+            <span>タスク管理 / パイプライン</span>
+          </li>
+          <li>
+            <span style="color:#dc2626;font-weight:800;font-size:0.9rem">&#10005;</span>
+            <span>請求管理</span>
+          </li>
+          <li>
+            <span style="color:#dc2626;font-weight:800;font-size:0.9rem">&#10005;</span>
+            <span>クライアントポータル</span>
+          </li>
+          <li>
+            <span style="color:#dc2626;font-weight:800;font-size:0.9rem">&#10005;</span>
+            <span>AI分析 / 自動レポート</span>
+          </li>
+          <li>
+            <span style="color:#dc2626;font-weight:800;font-size:0.9rem">&#10005;</span>
+            <span>ナレッジ管理</span>
+          </li>
+          <li>
+            <span style="color:#dc2626;font-weight:800;font-size:0.9rem">&#10005;</span>
+            <span>補助金ポータル</span>
+          </li>
+          <li>
+            <span style="color:#dc2626;font-weight:800;font-size:0.9rem">&#10005;</span>
+            <span>教育コンテンツ（別途ミギウデスクール）</span>
+          </li>
+          <li>
+            <span style="color:#dc2626;font-weight:800;font-size:0.9rem">&#10005;</span>
+            <span>コミュニケーション連携（ChatWork/Slack/LINE WORKS）</span>
           </li>
         </ul>
 
@@ -1584,8 +1844,9 @@
 
     <!-- Rit -->
     <div class="tool-card rit">
-      <div class="tool-header">Rit TAX PARTNER</div>
+      <div class="tool-header">Rit TAX PARTNER（14画面）</div>
       <div class="tool-body">
+        <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:16px;font-weight:600">統合プラットフォームの全機能</p>
         <ul class="tool-feature-list">
           <li>
             <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
@@ -1593,19 +1854,27 @@
           </li>
           <li>
             <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
-            <span><strong>freee/MF直接API連携</strong> &#8212; リアルタイム同期</span>
+            <span><strong>17サービスAPI直接連携</strong> &#8212; freee会計/人事労務、MF会計/給与/請求書/経費、弥生Misoca、クラウドサイン、Google Drive、国税庁API、e-Tax、eLTAX、ChatWork、Slack、LINE WORKS、STREAMED</span>
           </li>
           <li>
             <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
-            <span><strong>ダッシュボードで全体を俯瞰</strong> &#8212; KPIを一目で把握</span>
+            <span><strong>3層ナレッジ管理</strong> &#8212; システム共通ルール / 事務所独自ルール / 企業別ルールの3層構造</span>
           </li>
           <li>
             <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
-            <span><strong>カンバンボードで進捗管理</strong> &#8212; 決算月ベースのタスク管理</span>
+            <span><strong>24本の税務ナレッジDB</strong> &#8212; 法人税法/所得税法/消費税法/地方税/給与社保/源泉徴収/届出書/税務調査/減価償却/相続贈与税/印紙税/法人設立/会計基準/節税提案/固定資産税/補助金申請実務 + 既存8本</span>
           </li>
           <li>
             <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
-            <span><strong>クライアントポータル</strong> &#8212; 顧問先と直接やりとり</span>
+            <span><strong>AI自動学習</strong> &#8212; 過去の帳票データから仕訳ルールを自動生成</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
+            <span><strong>補助金・支援制度ポータル</strong> &#8212; 地域・業種・規模フィルターで検索+顧問先案内</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
+            <span><strong>クライアントポータル</strong> &#8212; 顧問先と直接やりとり（進捗/書類/メッセージ/請求書/ルール確認/補助金情報）</span>
           </li>
           <li>
             <span class="feat-icon" style="color:var(--green)">&#10003;</span>
@@ -1674,19 +1943,19 @@
     <div class="summary-cards">
       <div class="summary-card">
         <h3>ポジショニング</h3>
-        <p>so-laboのTAX GROUPは<strong>「ネットワーク型」</strong>。融資実績と会計事務所ネットワークで顧問先を紹介する仕組み。<br><br>Rit TAX PARTNERは<strong>「テクノロジー型」</strong>。ツールの完成度、AI分析、クライアントポータルで事務所の業務効率を根本から変える。</p>
+        <p>so-laboのTAX GROUPは<strong>「ネットワーク型」</strong>。融資実績と120社超の会計事務所ネットワークで顧問先を紹介する仕組み。<br><br>Rit TAX PARTNERは<strong>「テクノロジー型」</strong>。14画面の本格SaaS、24本の税務ナレッジDB、17サービスAPI連携で事務所の業務効率を根本から変える。</p>
       </div>
       <div class="summary-card">
         <h3>パッケージ構成</h3>
-        <p><strong>ツール x 教育 x 集客</strong>の3本柱でパッケージ化。<br><br>3段階のプランで事務所規模に応じた提供。ツールの完成度と初期費用の設定で、so-laboとの差別化を図る。料金設定は要検討。</p>
+        <p><strong>ツール x 教育 x 集客</strong>の3本柱でパッケージ化。<br><br>3段階のプランで事務所規模に応じた提供。3層ナレッジ管理、AI自動学習、補助金ポータルで、so-laboのAppSheetでは実現不可能な価値を提供。料金設定は要検討。</p>
       </div>
       <div class="summary-card">
-        <h3>開発スケジュール</h3>
-        <p><strong>Phase 1のMVP完成まで2-3ヶ月</strong>。<br><br>CRM + タスク管理 + freee/MF連携の核となる機能を先行リリースし、クライアントポータルやAI分析は段階的に追加。</p>
+        <h3>技術的優位性</h3>
+        <p><strong>17サービスのAPI直接連携</strong>（so-laboは約5サービス）。<br><br>freee/MF直接API、国税庁インボイスAPI、法人番号API、e-Tax/eLTAX、ChatWork/Slack/LINE WORKS等、税理士事務所の業務フロー全体をカバー。</p>
       </div>
       <div class="summary-card">
         <h3>勝ち筋</h3>
-        <p>so-laboの「ネットワーク」には真っ向勝負しない。<br><br><strong>「ツールとしての圧倒的な完成度」</strong>で差別化。AppSheetでは絶対にできないクライアントポータル・AI分析が最大の武器。</p>
+        <p>so-laboの「ネットワーク」には真っ向勝負しない。<br><br><strong>「ツールとしての圧倒的な完成度」</strong>で差別化。AppSheetでは絶対にできないクライアントポータル・3層ナレッジ管理・AI自動学習・補助金ポータルが最大の武器。</p>
       </div>
     </div>
 
@@ -1695,8 +1964,8 @@
       <ol>
         <li><strong>プラン詳細の決定</strong> &#8212; 料金体系、含まれる機能範囲の確定</li>
         <li><strong>ターゲット顧客の特定</strong> &#8212; 最初に狙うべき会計事務所のプロファイル策定</li>
-        <li><strong>MVP開発着手</strong> &#8212; CRM + タスク管理 + freee/MF連携を最優先で開発</li>
         <li><strong>パイロットユーザー獲得</strong> &#8212; 3〜5事務所でのテスト運用開始</li>
+        <li><strong>ナレッジDB・補助金ポータルの拡充</strong> &#8212; 24本のナレッジと補助金情報の継続的な更新体制の構築</li>
       </ol>
     </div>
   </div>
