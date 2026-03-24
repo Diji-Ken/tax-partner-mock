@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { subsidies } from "@/data/subsidies";
-import { Search, ExternalLink, Send, X, Star, Clock } from "lucide-react";
+import { subsidies, sourceLabels, sourceBadgeColors, sourceDbCounts } from "@/data/subsidies";
+import type { SubsidySource } from "@/data/subsidies";
+import { Search, ExternalLink, Send, X, Star, Clock, RefreshCw, Database } from "lucide-react";
 
 const statusColor: Record<string, string> = {
   "募集中": "border-l-green-500",
@@ -18,33 +19,80 @@ const statusBadge: Record<string, string> = {
   "共済": "bg-purple-100 text-purple-700",
 };
 
+const lastUpdated = "2026-03-24 06:00";
+
 export default function SubsidyPage() {
   const [filterRegion, setFilterRegion] = useState("");
   const [filterIndustry, setFilterIndustry] = useState("");
   const [filterScale, setFilterScale] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterSource, setFilterSource] = useState("");
   const [showGuideModal, setShowGuideModal] = useState(false);
 
   const filtered = useMemo(() => {
     return subsidies.filter((s) => {
       if (filterRegion && s.region !== filterRegion) return false;
       if (filterStatus && s.status !== filterStatus) return false;
+      if (filterSource && s.source !== filterSource) return false;
       return true;
     });
-  }, [filterRegion, filterStatus]);
+  }, [filterRegion, filterStatus, filterSource]);
 
   const featured = subsidies.filter((s) => s.status === "募集中").slice(0, 3);
 
+  // データソース別の件数（デモデータ内）
+  const sourceCountsInData = useMemo(() => {
+    const counts: Partial<Record<SubsidySource, number>> = {};
+    for (const s of subsidies) {
+      counts[s.source] = (counts[s.source] || 0) + 1;
+    }
+    return counts;
+  }, []);
+
+  // 利用中のデータソース一覧
+  const activeSources: SubsidySource[] = ['jgrants', 'smart-hojokin', 'jnet21', 'mirasapo', 'joseikin-now', 'hojyokin-portal'];
+
   return (
     <div className="p-8">
-      <h2 className="text-2xl font-bold mb-6">補助金・支援制度</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">補助金・支援制度</h2>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-[#64748b]">最終更新: {lastUpdated}</span>
+          <button className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">
+            <RefreshCw size={14} />
+            データ更新
+          </button>
+        </div>
+      </div>
+
+      {/* データソースサマリー */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Database size={16} className="text-orange-600" />
+          <h3 className="text-sm font-semibold">連携データソース</h3>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {activeSources.map((src) => (
+            <div key={src} className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${sourceBadgeColors[src]}`}>
+                {sourceLabels[src]}
+              </span>
+              <span className="text-xs text-[#64748b]">{sourceDbCounts[src]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-5 flex items-center gap-3 flex-wrap">
         <select value={filterRegion} onChange={(e) => setFilterRegion(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
           <option value="">地域</option>
           <option value="全国">全国</option>
+          <option value="東京都">東京都</option>
           <option value="埼玉県">埼玉県</option>
+          <option value="大阪府">大阪府</option>
+          <option value="愛知県">愛知県</option>
+          <option value="福岡県">福岡県</option>
         </select>
         <select value={filterIndustry} onChange={(e) => setFilterIndustry(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
           <option value="">業種</option>
@@ -63,6 +111,17 @@ export default function SubsidyPage() {
           <option value="税制">税制優遇</option>
           <option value="共済">共済</option>
         </select>
+        <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+          <option value="">データソース</option>
+          <option value="jgrants">jGrants</option>
+          <option value="smart-hojokin">スマート補助金</option>
+          <option value="jnet21">J-Net21</option>
+          <option value="mirasapo">ミラサポ</option>
+          <option value="joseikin-now">助成金なう</option>
+          <option value="hojyokin-portal">補助金ポータル</option>
+          <option value="manual">手動登録</option>
+        </select>
+        <span className="text-xs text-[#64748b] ml-auto">{filtered.length}件表示</span>
       </div>
 
       <div className="grid grid-cols-3 gap-5">
@@ -75,6 +134,7 @@ export default function SubsidyPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-base font-semibold">{s.name}</h3>
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge[s.status]}`}>{s.status}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${sourceBadgeColors[s.source]}`}>{sourceLabels[s.source]}</span>
                   </div>
                   <p className="text-sm text-[#64748b] mb-3">{s.description}</p>
                 </div>
@@ -126,8 +186,11 @@ export default function SubsidyPage() {
             <div className="space-y-3">
               {featured.map((s) => (
                 <div key={s.id} className="p-3 bg-orange-50 rounded-lg">
-                  <p className="text-sm font-medium">{s.name}</p>
-                  <p className="text-xs text-[#64748b] mt-1">{s.maxAmount}</p>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <p className="text-sm font-medium">{s.name}</p>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${sourceBadgeColors[s.source]}`}>{sourceLabels[s.source]}</span>
+                  </div>
+                  <p className="text-xs text-[#64748b]">{s.maxAmount}</p>
                 </div>
               ))}
             </div>
@@ -138,14 +201,34 @@ export default function SubsidyPage() {
               <h3 className="text-sm font-semibold">期限が近い</h3>
             </div>
             <div className="space-y-3">
-              <div className="p-3 bg-yellow-50 rounded-lg">
-                <p className="text-sm font-medium">小規模事業者持続化補助金</p>
-                <p className="text-xs text-yellow-700 mt-1">期限: 2026-05-15</p>
-              </div>
-              <div className="p-3 bg-yellow-50 rounded-lg">
-                <p className="text-sm font-medium">IT導入補助金2026</p>
-                <p className="text-xs text-yellow-700 mt-1">期限: 2026-06-30</p>
-              </div>
+              {subsidies
+                .filter((s) => s.status === '募集中' && s.deadline !== '随時加入可')
+                .sort((a, b) => a.deadline.localeCompare(b.deadline))
+                .slice(0, 3)
+                .map((s) => (
+                  <div key={s.id} className="p-3 bg-yellow-50 rounded-lg">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <p className="text-sm font-medium">{s.name}</p>
+                    </div>
+                    <p className="text-xs text-yellow-700">期限: {s.deadline}</p>
+                  </div>
+                ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Database size={16} className="text-blue-600" />
+              <h3 className="text-sm font-semibold">DB件数サマリー</h3>
+            </div>
+            <div className="space-y-2">
+              {activeSources.map((src) => (
+                <div key={src} className="flex items-center justify-between text-xs">
+                  <span className={`rounded-full px-2 py-0.5 font-medium ${sourceBadgeColors[src]}`}>
+                    {sourceLabels[src]}
+                  </span>
+                  <span className="text-[#64748b]">{sourceDbCounts[src]}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

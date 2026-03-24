@@ -16,6 +16,7 @@ import {
   Landmark,
   ScanLine,
   Globe,
+  Database,
 } from "lucide-react";
 
 const categoryIcon: Record<string, React.ElementType> = {
@@ -23,6 +24,7 @@ const categoryIcon: Record<string, React.ElementType> = {
   "給与・労務": Users,
   "請求・経費": Receipt,
   "公的API": Globe,
+  "補助金DB": Database,
   "税務申告": Landmark,
   "記帳・OCR": ScanLine,
   "ストレージ": HardDrive,
@@ -36,6 +38,7 @@ const categoryOrder = [
   "給与・労務",
   "請求・経費",
   "公的API",
+  "補助金DB",
   "税務申告",
   "記帳・OCR",
   "ストレージ",

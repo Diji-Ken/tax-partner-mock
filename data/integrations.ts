@@ -2,7 +2,7 @@ export type Integration = {
   id: string;
   name: string;
   description: string;
-  category: '会計ソフト' | '給与・労務' | '請求・経費' | 'ストレージ' | '契約管理' | '決済' | 'コミュニケーション' | '税務申告' | '記帳・OCR' | '公的API';
+  category: '会計ソフト' | '給与・労務' | '請求・経費' | 'ストレージ' | '契約管理' | '決済' | 'コミュニケーション' | '税務申告' | '記帳・OCR' | '公的API' | '補助金DB';
   connected: boolean;
   lastSync: string | null;
   connectedClients: number;
@@ -26,6 +26,11 @@ export const integrations: Integration[] = [
   // === 公的API ===
   { id: '14', name: '国税庁 インボイスAPI', description: '適格請求書発行事業者の登録番号検証。法人番号・更新日での検索。', category: '公的API', connected: true, lastSync: '2026-03-24 06:00', connectedClients: 12, icon: 'nta' },
   { id: '15', name: '国税庁 法人番号API', description: '法人番号の検索・法人情報取得。取引先の実在確認に利用。', category: '公的API', connected: true, lastSync: '2026-03-24 06:00', connectedClients: 12, icon: 'nta-corp' },
+
+  // === 補助金DB ===
+  { id: '19', name: 'スマート補助金', description: '75,818件の補助金DB。自治体制度を含む日本最大級の補助金検索。都道府県・市区町村レベルの制度も網羅。', category: '補助金DB', connected: true, lastSync: '2026-03-24 06:00', connectedClients: 12, icon: 'smart-hojokin' },
+  { id: '20', name: '助成金なう', description: '国・自治体14.5万件＋財団9,800件の助成金・補助金DB。月1,500〜2,000件更新。過去採択企業83万社DB付き。', category: '補助金DB', connected: false, lastSync: null, connectedClients: 0, icon: 'joseikin-now' },
+  { id: '21', name: '補助金ポータル', description: '3万件超の補助金情報。士業向けパートナー連携あり（shigyo-portal.jp）。月間100万人利用。', category: '補助金DB', connected: false, lastSync: null, connectedClients: 0, icon: 'hojyokin-portal' },
 
   // === 税務申告 ===
   { id: '16', name: 'e-Tax連携', description: '国税（法人税・所得税・消費税）の電子申告。XBRL形式データ生成。', category: '税務申告', connected: false, lastSync: null, connectedClients: 0, icon: 'etax' },
