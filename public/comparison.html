@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>税理士向けプラットフォーム 競合比較レポート | TAX GROUP vs Rit TAX PARTNER</title>
+<style>
+  :root {
+    --navy: #1a2744;
+    --navy-light: #2a3f6a;
+    --navy-dark: #0f1a2e;
+    --solabo-bg: #e8f0fe;
+    --solabo-border: #4a8af4;
+    --solabo-accent: #2563eb;
+    --rit-bg: #fff5eb;
+    --rit-border: #f59e0b;
+    --rit-accent: #ea580c;
+    --rit-highlight: #ff6b00;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --bg: #f8fafc;
+    --white: #ffffff;
+    --green: #16a34a;
+    --blue: #2563eb;
+    --yellow: #ca8a04;
+    --gray: #94a3b8;
+    --border: #e2e8f0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+  }
+
+  /* ===== Fixed Navigation ===== */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--navy);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+  }
+
+  nav .nav-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+  }
+
+  nav .nav-logo {
+    color: var(--white);
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    padding: 14px 0;
+  }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+
+  nav li a {
+    display: block;
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 0.78rem;
+    padding: 14px 12px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  nav li a:hover {
+    color: var(--white);
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* ===== Hero / Header ===== */
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 50%, #1e4d8c 100%);
+    color: var(--white);
+    padding: 140px 24px 80px;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+
+  .hero .subtitle {
+    font-size: 1.3rem;
+    font-weight: 400;
+    opacity: 0.9;
+    margin-bottom: 24px;
+  }
+
+  .hero .vs-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 100px;
+    padding: 12px 32px;
+    margin-bottom: 24px;
+  }
+
+  .hero .vs-badge .brand {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .hero .vs-badge .brand.solabo { color: #93c5fd; }
+  .hero .vs-badge .brand.rit { color: #fdba74; }
+  .hero .vs-badge .vs { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+
+  .hero .date {
+    font-size: 0.95rem;
+    opacity: 0.7;
+  }
+
+  /* ===== Section Base ===== */
+  section {
+    padding: 80px 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--navy);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .section-subtitle {
+    text-align: center;
+    color: var(--text-light);
+    margin-bottom: 48px;
+    font-size: 0.95rem;
+  }
+
+  .section-divider {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--solabo-accent), var(--rit-accent));
+    margin: 0 auto 48px;
+    border-radius: 2px;
+  }
+
+  /* ===== Two Column Layout ===== */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    border: 2px solid var(--border);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+
+  .card.solabo {
+    border-color: var(--solabo-border);
+    background: linear-gradient(180deg, var(--solabo-bg) 0%, var(--white) 40%);
+  }
+
+  .card.rit {
+    border-color: var(--rit-border);
+    background: linear-gradient(180deg, var(--rit-bg) 0%, var(--white) 40%);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .card-header .icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--white);
+  }
+
+  .card.solabo .card-header .icon { background: var(--solabo-accent); }
+  .card.rit .card-header .icon { background: var(--rit-accent); }
+
+  .card-header .label {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .card .catchphrase {
+    font-style: italic;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.02);
+    border-radius: 8px;
+    border-left: 3px solid var(--border);
+  }
+
+  .card.solabo .catchphrase { border-left-color: var(--solabo-accent); }
+  .card.rit .catchphrase { border-left-color: var(--rit-accent); }
+
+  .info-list {
+    list-style: none;
+  }
+
+  .info-list li {
+    padding: 8px 0;
+    font-size: 0.92rem;
+    display: flex;
+    gap: 8px;
+  }
+
+  .info-list li .label-key {
+    min-width: 120px;
+    color: var(--text-light);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .info-list li .label-val {
+    font-weight: 600;
+  }
+
+  /* ===== Pricing Section ===== */
+  #pricing {
+    background: var(--white);
+    max-width: 100%;
+    padding: 80px 24px;
+  }
+
+  #pricing .inner {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 48px;
+  }
+
+  .pricing-block {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  .pricing-block.solabo { border: 2px solid var(--solabo-border); }
+  .pricing-block.rit { border: 2px solid var(--rit-border); }
+
+  .pricing-block .block-header {
+    padding: 20px 24px;
+    color: var(--white);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .pricing-block.solabo .block-header { background: var(--solabo-accent); }
+  .pricing-block.rit .block-header { background: var(--rit-accent); }
+
+  .pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  .pricing-table th, .pricing-table td {
+    padding: 12px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pricing-table th {
+    background: rgba(0,0,0,0.03);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .pricing-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    background: rgba(0,0,0,0.01);
+    white-space: nowrap;
+  }
+
+  .pricing-table tr:hover td {
+    background: rgba(0,0,0,0.02);
+  }
+
+  .pricing-table .price {
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+
+  .pricing-block.solabo .pricing-table .price { color: var(--solabo-accent); }
+  .pricing-block.rit .pricing-table .price { color: var(--rit-accent); }
+
+  .pricing-note {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    font-size: 0.82rem;
+    color: var(--text-light);
+    background: rgba(0,0,0,0.02);
+  }
+
+  .rit-draft-badge {
+    display: inline-block;
+    background: var(--rit-accent);
+    color: var(--white);
+    font-size: 0.72rem;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .highlight-row td {
+    background: #fef3c7 !important;
+    font-weight: 700;
+  }
+
+  /* ===== Feature Matrix ===== */
+  .matrix-wrapper {
+    overflow-x: auto;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    min-width: 700px;
+  }
+
+  .matrix-table thead th {
+    background: var(--navy);
+    color: var(--white);
+    padding: 16px 14px;
+    font-weight: 700;
+    text-align: center;
+    position: sticky;
+    top: 0;
+  }
+
+  .matrix-table thead th:first-child,
+  .matrix-table thead th:nth-child(2) {
+    text-align: left;
+  }
+
+  .matrix-table thead th.solabo-col {
+    background: var(--solabo-accent);
+    min-width: 150px;
+  }
+
+  .matrix-table thead th.rit-col {
+    background: var(--rit-accent);
+    min-width: 150px;
+  }
+
+  .matrix-table tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .matrix-table tbody td:first-child {
+    text-align: left;
+    font-weight: 700;
+    color: var(--navy);
+    background: rgba(26,39,68,0.03);
+    white-space: nowrap;
+  }
+
+  .matrix-table tbody td:nth-child(2) {
+    text-align: left;
+    font-weight: 500;
+  }
+
+  .matrix-table tbody tr:hover td {
+    background: rgba(26,39,68,0.04);
+  }
+
+  .matrix-table tbody tr:hover td:first-child {
+    background: rgba(26,39,68,0.06);
+  }
+
+  .category-row td {
+    background: var(--navy) !important;
+    color: var(--white) !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem;
+    padding: 10px 14px !important;
+  }
+
+  /* Rating badges */
+  .rate {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+
+  .rate-excellent { background: #dcfce7; color: var(--green); }
+  .rate-good { background: #dbeafe; color: var(--blue); }
+  .rate-fair { background: #fef9c3; color: var(--yellow); }
+  .rate-none { background: #f1f5f9; color: var(--gray); }
+
+  .rate-label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-light);
+    margin-top: 4px;
+    line-height: 1.2;
+  }
+
+  .rate-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* Rit win highlight */
+  .rit-win td:nth-child(4) {
+    background: #fff7ed !important;
+  }
+
+  .solabo-win td:nth-child(3) {
+    background: #eff6ff !important;
+  }
+
+  /* ===== Strengths Section ===== */
+  .strengths-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .strength-card {
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  .strength-card.solabo {
+    background: var(--solabo-bg);
+    border: 2px solid var(--solabo-border);
+  }
+
+  .strength-card.rit {
+    background: var(--rit-bg);
+    border: 2px solid var(--rit-border);
+  }
+
+  .strength-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .strength-card.solabo h3 { color: var(--solabo-accent); }
+  .strength-card.rit h3 { color: var(--rit-accent); }
+
+  .strength-list {
+    list-style: none;
+  }
+
+  .strength-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    font-size: 0.92rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .strength-list li:last-child { border-bottom: none; }
+
+  .strength-list li .bullet {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: var(--white);
+    margin-top: 2px;
+  }
+
+  .strength-card.solabo .bullet { background: var(--solabo-accent); }
+  .strength-card.rit .bullet { background: var(--rit-accent); }
+
+  /* ===== Tool Comparison ===== */
+  .tool-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .tool-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  .tool-card.solabo { border: 2px solid var(--solabo-border); }
+  .tool-card.rit { border: 2px solid var(--rit-border); }
+
+  .tool-card .tool-header {
+    padding: 20px 24px;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-align: center;
+  }
+
+  .tool-card.solabo .tool-header { background: var(--solabo-accent); }
+  .tool-card.rit .tool-header { background: var(--rit-accent); }
+
+  .tool-card .tool-body {
+    padding: 24px;
+  }
+
+  .tool-feature-list {
+    list-style: none;
+  }
+
+  .tool-feature-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tool-feature-list li:last-child { border-bottom: none; }
+
+  .tool-feature-list li .feat-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+    margin-top: 2px;
+  }
+
+  /* ===== Mock UI ===== */
+  .mock-ui {
+    background: #f0f4f8;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .mock-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .mock-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .mock-dot.red { background: #ef4444; }
+  .mock-dot.yellow { background: #f59e0b; }
+  .mock-dot.green { background: #22c55e; }
+
+  .mock-screen {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 180px;
+  }
+
+  /* Dashboard mock */
+  .mock-dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .mock-widget {
+    background: linear-gradient(135deg, var(--rit-bg), #fff);
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .mock-widget .num {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--rit-accent);
+  }
+
+  .mock-widget .lbl {
+    font-size: 0.65rem;
+    color: var(--text-light);
+  }
+
+  .mock-kanban {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .mock-col {
+    background: #f8fafc;
+    border-radius: 6px;
+    padding: 6px;
+    min-height: 60px;
+  }
+
+  .mock-col-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .mock-task {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 0.55rem;
+    margin-bottom: 3px;
+    border-left: 3px solid var(--rit-accent);
+  }
+
+  /* AppSheet mock */
+  .mock-appsheet {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .mock-mobile-frame {
+    max-width: 200px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: 20px;
+    border: 2px solid #d1d5db;
+    padding: 8px;
+    min-height: 160px;
+  }
+
+  .mock-mobile-header {
+    background: var(--solabo-accent);
+    color: var(--white);
+    border-radius: 12px 12px 0 0;
+    padding: 8px;
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  .mock-mobile-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-bottom: 1px solid #f1f3f4;
+    font-size: 0.6rem;
+  }
+
+  .mock-mobile-row .key { color: var(--text-light); }
+  .mock-mobile-row .val { font-weight: 600; }
+
+  /* ===== Summary Section ===== */
+  #summary {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    max-width: 100%;
+    padding: 80px 24px;
+    color: var(--white);
+  }
+
+  #summary .inner {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  #summary .section-title { color: var(--white); }
+  #summary .section-subtitle { color: rgba(255,255,255,0.7); }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .summary-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 28px;
+  }
+
+  .summary-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #fdba74;
+  }
+
+  .summary-card p {
+    font-size: 0.92rem;
+    line-height: 1.8;
+    opacity: 0.9;
+  }
+
+  .next-steps {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 32px;
+  }
+
+  .next-steps h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #fdba74;
+  }
+
+  .next-steps ol {
+    padding-left: 24px;
+  }
+
+  .next-steps li {
+    padding: 8px 0;
+    font-size: 0.95rem;
+    opacity: 0.9;
+  }
+
+  /* ===== Footer ===== */
+  footer {
+    background: var(--navy-dark);
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    padding: 32px 24px;
+    font-size: 0.85rem;
+  }
+
+  footer .footer-main {
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 8px;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 900px) {
+    .two-col, .pricing-grid, .strengths-grid, .tool-comparison, .summary-cards {
+      grid-template-columns: 1fr;
+    }
+
+    nav .nav-inner {
+      flex-direction: column;
+      padding: 8px 16px;
+    }
+
+    nav ul {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    nav li a {
+      font-size: 0.72rem;
+      padding: 8px 8px;
+    }
+
+    .hero { padding: 120px 16px 60px; }
+    .hero h1 { font-size: 1.5rem; }
+    .hero .subtitle { font-size: 1rem; }
+
+    section { padding: 48px 16px; }
+    .section-title { font-size: 1.3rem; }
+
+    .mock-dashboard { grid-template-columns: repeat(3, 1fr); }
+    .mock-kanban { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    .hero .vs-badge {
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px 24px;
+    }
+
+    .info-list li {
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .info-list li .label-key { min-width: auto; }
+  }
+
+  /* ===== Print Styles ===== */
+  @media print {
+    nav { display: none !important; }
+
+    .hero {
+      padding: 40px 24px;
+      background: var(--navy) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    section { padding: 40px 0; page-break-inside: avoid; }
+
+    .card, .pricing-block, .matrix-wrapper, .strength-card, .tool-card, .summary-card, .next-steps {
+      break-inside: avoid;
+      box-shadow: none;
+    }
+
+    .two-col, .pricing-grid, .strengths-grid, .tool-comparison, .summary-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    body { font-size: 11pt; }
+
+    #pricing, #summary {
+      background: var(--white) !important;
+      color: var(--text) !important;
+    }
+
+    #summary .section-title { color: var(--navy) !important; }
+    #summary .section-subtitle { color: var(--text-light) !important; }
+    #summary .summary-card { border: 1px solid var(--border); background: var(--bg) !important; }
+    #summary .summary-card h3 { color: var(--rit-accent) !important; }
+    #summary .summary-card p { color: var(--text) !important; opacity: 1 !important; }
+    #summary .next-steps { border: 1px solid var(--border); background: var(--bg) !important; }
+    #summary .next-steps h3 { color: var(--rit-accent) !important; }
+    #summary .next-steps li { color: var(--text) !important; opacity: 1 !important; }
+
+    footer {
+      background: var(--white) !important;
+      color: var(--text) !important;
+      border-top: 2px solid var(--navy);
+    }
+
+    footer .footer-main { color: var(--navy) !important; }
+
+    .matrix-table thead th {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .rate {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .card:hover, .tool-card:hover { transform: none; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">TAX PLATFORM COMPARISON</div>
+    <ul>
+      <li><a href="#overview">全体像</a></li>
+      <li><a href="#pricing">料金&プラン</a></li>
+      <li><a href="#matrix">機能比較</a></li>
+      <li><a href="#strengths">強み分析</a></li>
+      <li><a href="#tools">ツール比較</a></li>
+      <li><a href="#summary">まとめ</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>税理士向けプラットフォーム<br>競合比較レポート</h1>
+  <div class="vs-badge">
+    <span class="brand solabo">TAX GROUP（so-labo）</span>
+    <span class="vs">VS</span>
+    <span class="brand rit">Rit TAX PARTNER</span>
+  </div>
+  <div class="subtitle">ネットワーク型 vs テクノロジー型 &#8212; どちらが勝てるか</div>
+  <div class="date">2026年3月24日 打ち合わせ資料</div>
+</div>
+
+<!-- Section 1: Overview -->
+<section id="overview">
+  <h2 class="section-title">サービス全体像の比較</h2>
+  <p class="section-subtitle">2つのプラットフォームの基本情報と方向性</p>
+  <div class="section-divider"></div>
+
+  <div class="two-col">
+    <!-- so-labo -->
+    <div class="card solabo">
+      <div class="card-header">
+        <div class="icon">S</div>
+        <div>
+          <div class="label">TAX GROUP</div>
+          <div style="font-size:0.8rem;color:var(--text-light)">株式会社SoLabo</div>
+        </div>
+      </div>
+      <div class="catchphrase">「事業者 x 税理士 x SoLabo 共創で日本をハッピーにする」</div>
+      <ul class="info-list">
+        <li>
+          <span class="label-key">運営会社</span>
+          <span class="label-val">株式会社SoLabo（渋谷区）</span>
+        </li>
+        <li>
+          <span class="label-key">サービス開始</span>
+          <span class="label-val">2025年9月</span>
+        </li>
+        <li>
+          <span class="label-key">導入実績</span>
+          <span class="label-val">120社超の会計事務所</span>
+        </li>
+        <li>
+          <span class="label-key">コンセプト</span>
+          <span class="label-val">ボランタリーチェーン（FC型ネットワーク）</span>
+        </li>
+        <li>
+          <span class="label-key">基盤技術</span>
+          <span class="label-val">Google Workspace + AppSheet + TaxSys（AI-OCR）</span>
+        </li>
+        <li>
+          <span class="label-key">技術レベル</span>
+          <span class="label-val">ノーコード（AppSheet）ベース</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Rit -->
+    <div class="card rit">
+      <div class="card-header">
+        <div class="icon">R</div>
+        <div>
+          <div class="label">Rit TAX PARTNER</div>
+          <div style="font-size:0.8rem;color:var(--text-light)">株式会社Rit</div>
+        </div>
+      </div>
+      <div class="catchphrase">「テクノロジーで会計事務所の未来を変える」</div>
+      <ul class="info-list">
+        <li>
+          <span class="label-key">運営会社</span>
+          <span class="label-val">株式会社Rit（さいたま市）</span>
+        </li>
+        <li>
+          <span class="label-key">サービス開始</span>
+          <span class="label-val">2026年予定</span>
+        </li>
+        <li>
+          <span class="label-key">導入実績</span>
+          <span class="label-val">新規（これから獲得）</span>
+        </li>
+        <li>
+          <span class="label-key">コンセプト</span>
+          <span class="label-val">税理士事務所のDXパートナー</span>
+        </li>
+        <li>
+          <span class="label-key">基盤技術</span>
+          <span class="label-val">Next.js + Supabase + AI分析</span>
+        </li>
+        <li>
+          <span class="label-key">技術レベル</span>
+          <span class="label-val">本格SaaS開発（freee/MF直接API連携）</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Section 2: Pricing -->
+<section id="pricing">
+  <div class="inner">
+    <h2 class="section-title">プラン比較</h2>
+    <p class="section-subtitle">so-laboの料金体系 vs Ritの提供可能プラン（価格未定）</p>
+    <div class="section-divider"></div>
+
+    <div class="pricing-grid">
+      <!-- so-labo pricing -->
+      <div class="pricing-block solabo">
+        <div class="block-header">TAX GROUP（so-labo）</div>
+        <table class="pricing-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Starter</th>
+              <th>Standard</th>
+              <th>Standard+</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td>月額</td>
+              <td><span class="price">&yen;20,000</span></td>
+              <td><span class="price">&yen;39,800</span></td>
+              <td><span class="price">&yen;49,800</span></td>
+            </tr>
+            <tr>
+              <td>年額</td>
+              <td>&yen;180,000</td>
+              <td>&yen;357,600</td>
+              <td>&yen;477,600</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>初期費用</td>
+              <td colspan="3" style="text-align:center;font-weight:800;color:#dc2626">&yen;150,000</td>
+            </tr>
+            <tr>
+              <td>TaxSysクレジット</td>
+              <td>3,000/月</td>
+              <td>5,000/月</td>
+              <td>5,000/月</td>
+            </tr>
+            <tr>
+              <td>アカウント数</td>
+              <td>2まで</td>
+              <td>無制限</td>
+              <td>無制限</td>
+            </tr>
+            <tr>
+              <td>サイトページ作成</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>教育コンテンツ</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>個別壁打ち相談</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Rit pricing -->
+      <div class="pricing-block rit">
+        <div class="block-header">Rit TAX PARTNER <span class="rit-draft-badge">プラン案</span></div>
+        <table class="pricing-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>ライト</th>
+              <th>スタンダード</th>
+              <th>プレミアム</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td>月額</td>
+              <td><span class="price" style="font-size:1rem;color:var(--text-light)">要検討</span></td>
+              <td><span class="price" style="font-size:1rem;color:var(--text-light)">要検討</span></td>
+              <td><span class="price" style="font-size:1rem;color:var(--text-light)">要検討</span></td>
+            </tr>
+            <tr class="highlight-row">
+              <td>初期費用</td>
+              <td colspan="3" style="text-align:center;font-weight:800;color:var(--text-light)">要検討</td>
+            </tr>
+            <tr>
+              <td>CRM・タスク管理</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>freee/MF連携</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>アカウント数</td>
+              <td>3まで</td>
+              <td>10まで</td>
+              <td>無制限</td>
+            </tr>
+            <tr>
+              <td>クライアントポータル</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>AI分析・レポート</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--green)">&#9679;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+            <tr>
+              <td>教育コンテンツ</td>
+              <td>基礎のみ</td>
+              <td>全コース</td>
+              <td>全コース</td>
+            </tr>
+            <tr>
+              <td>個別DX相談</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td>月1回</td>
+              <td>月2回</td>
+            </tr>
+            <tr>
+              <td>LP制作・SEO支援</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--gray)">&#10005;</td>
+              <td style="color:var(--green)">&#9679;</td>
+            </tr>
+          </tbody>
+        </table>
+        <span class="pricing-note">※ 料金は未定。プランとして提供可能な機能案を整理</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 3: Feature Matrix -->
+<section id="matrix">
+  <h2 class="section-title">機能比較マトリクス</h2>
+  <p class="section-subtitle">主要機能を項目別に詳細比較（ &#9678;=優秀 / &#9675;=対応 / &#9651;=制限付き / &#10005;=非対応 ）</p>
+  <div class="section-divider"></div>
+
+  <div class="matrix-wrapper">
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th style="min-width:100px">カテゴリ</th>
+          <th style="min-width:180px">機能</th>
+          <th class="solabo-col">TAX GROUP</th>
+          <th class="rit-col">Rit TAX PARTNER</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- CRM -->
+        <tr class="rit-win">
+          <td rowspan="4">CRM</td>
+          <td>顧客管理</td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span><span class="rate-label">AppSheet</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">本格CRM</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>カスタムフィールド</td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span><span class="rate-label">制限あり</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">自由設定</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>顧客ランク管理</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">A/B/C自動評価</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>パイプライン（新規案件管理）</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">カンバンボード</span></div></td>
+        </tr>
+
+        <!-- Task -->
+        <tr class="rit-win">
+          <td rowspan="3">タスク管理</td>
+          <td>タスク作成・管理</td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span><span class="rate-label">Google Tasks</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">カンバン+リスト</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>決算月ベース自動生成</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">テンプレート一括</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>進捗ダッシュボード</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">リアルタイム</span></div></td>
+        </tr>
+
+        <!-- OCR -->
+        <tr class="solabo-win">
+          <td rowspan="2">記帳・OCR</td>
+          <td>AI-OCR読取</td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">TaxSys（Gemini）</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span><span class="rate-label">Phase4で対応予定</span></div></td>
+        </tr>
+        <tr class="solabo-win">
+          <td>仕訳データ生成</td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span><span class="rate-label">連携で対応</span></div></td>
+        </tr>
+
+        <!-- Accounting -->
+        <tr class="rit-win">
+          <td rowspan="3">会計ソフト連携</td>
+          <td>freee連携</td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">TaxSys経由</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">直接API</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>MF連携</td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">TaxSys経由</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">直接API</span></div></td>
+        </tr>
+        <tr>
+          <td>弥生連携</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">CSV連携</span></div></td>
+        </tr>
+
+        <!-- Billing -->
+        <tr class="rit-win">
+          <td rowspan="2">請求管理</td>
+          <td>請求書作成・管理</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">自動発行対応</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>入金管理</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
+        </tr>
+
+        <!-- Document -->
+        <tr>
+          <td rowspan="3">ドキュメント</td>
+          <td>ファイル管理</td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">Google Drive</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">専用ストレージ</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>電帳法対応</td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
+        </tr>
+        <tr>
+          <td>電子サイン</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">クラウドサイン連携</span></div></td>
+        </tr>
+
+        <!-- Client Portal -->
+        <tr class="rit-win">
+          <td rowspan="4">クライアント<br>ポータル</td>
+          <td>顧客向け画面</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">専用ポータル</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>書類アップロード</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>進捗確認</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>メッセージ機能</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">チャットUI</span></div></td>
+        </tr>
+
+        <!-- AI -->
+        <tr class="rit-win">
+          <td rowspan="4">AI分析</td>
+          <td>収益分析</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>リスクアラート</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">自動検知</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>顧問料適正化提案</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>レポート自動生成</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span></div></td>
+        </tr>
+
+        <!-- Education -->
+        <tr class="solabo-win">
+          <td rowspan="3">教育</td>
+          <td>動画教材</td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">ミギウデスクール</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">AI活用特化</span></div></td>
+        </tr>
+        <tr>
+          <td>freee/MF講座</td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span></div></td>
+        </tr>
+        <tr class="solabo-win">
+          <td>融資・補助金講座</td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">32+24モジュール</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span><span class="rate-label">基礎のみ</span></div></td>
+        </tr>
+
+        <!-- Marketing -->
+        <tr>
+          <td rowspan="3">集客支援</td>
+          <td>Webサイト制作</td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">事務所ページ作成</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">LP制作+SEO</span></div></td>
+        </tr>
+        <tr class="solabo-win">
+          <td>顧問先紹介</td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">SoLabo経由</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">Rit BPO経由</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>DM送付</td>
+          <td><div class="rate-cell"><span class="rate rate-none">&#10005;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">ポータル内蔵</span></div></td>
+        </tr>
+
+        <!-- Community -->
+        <tr class="solabo-win">
+          <td rowspan="3">コミュニティ</td>
+          <td>事務所間交流</td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">ふらっと+</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">月次勉強会</span></div></td>
+        </tr>
+        <tr class="solabo-win">
+          <td>セミナー</td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">頻繁開催</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span></div></td>
+        </tr>
+        <tr>
+          <td>個別相談</td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span><span class="rate-label">Standard+のみ</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-good">&#9675;</span></div></td>
+        </tr>
+
+        <!-- UI/UX -->
+        <tr class="rit-win">
+          <td rowspan="2">UI/UX</td>
+          <td>管理画面の見た目</td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span><span class="rate-label">AppSheet（モバイル風）</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">モダンSaaS</span></div></td>
+        </tr>
+        <tr class="rit-win">
+          <td>ダッシュボード</td>
+          <td><div class="rate-cell"><span class="rate rate-fair">&#9651;</span></div></td>
+          <td><div class="rate-cell"><span class="rate rate-excellent">&#9678;</span><span class="rate-label">ウィジェット型</span></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="text-align:center;margin-top:24px;color:var(--text-light);font-size:0.85rem">
+    <span style="display:inline-flex;align-items:center;gap:4px;margin-right:16px"><span class="rate rate-excellent" style="width:20px;height:20px;font-size:0.7rem">&#9678;</span> 優秀</span>
+    <span style="display:inline-flex;align-items:center;gap:4px;margin-right:16px"><span class="rate rate-good" style="width:20px;height:20px;font-size:0.7rem">&#9675;</span> 対応</span>
+    <span style="display:inline-flex;align-items:center;gap:4px;margin-right:16px"><span class="rate rate-fair" style="width:20px;height:20px;font-size:0.7rem">&#9651;</span> 制限付き</span>
+    <span style="display:inline-flex;align-items:center;gap:4px"><span class="rate rate-none" style="width:20px;height:20px;font-size:0.7rem">&#10005;</span> 非対応</span>
+  </div>
+</section>
+
+<!-- Section 4: Strengths -->
+<section id="strengths" style="background:var(--white);max-width:100%;padding:80px 24px">
+  <div style="max-width:1280px;margin:0 auto">
+    <h2 class="section-title">強み分析 &#8212; 正直な比較</h2>
+    <p class="section-subtitle">so-laboの実績を認めつつ、Ritが技術で勝てるポイントを明確化</p>
+    <div class="section-divider"></div>
+
+    <div class="strengths-grid">
+      <div class="strength-card solabo">
+        <h3><span style="font-size:1.2rem">&#9632;</span> so-laboが強い点</h3>
+        <ul class="strength-list">
+          <li>
+            <span class="bullet">1</span>
+            <span><strong>融資支援8,000件の実績</strong> &#8212; 圧倒的な顧問先紹介力。税理士が最も求める「案件獲得」に直結</span>
+          </li>
+          <li>
+            <span class="bullet">2</span>
+            <span><strong>120社超の会計事務所ネットワーク</strong> &#8212; 既に大きなコミュニティが形成済み。先行者利益</span>
+          </li>
+          <li>
+            <span class="bullet">3</span>
+            <span><strong>ミギウデスクールの教育コンテンツ</strong> &#8212; 融資32 + 補助金24 + 記帳38 = 計94モジュール。体系的な教材は簡単に追いつけない</span>
+          </li>
+          <li>
+            <span class="bullet">4</span>
+            <span><strong>「ふらっと+」コミュニティの活発さ</strong> &#8212; 税理士同士の横のつながりを提供。孤独な個人事務所に刺さる</span>
+          </li>
+          <li>
+            <span class="bullet">5</span>
+            <span><strong>1年以上の運用実績</strong> &#8212; 2025年9月開始で実運用中。Ritはまだこれから</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="strength-card rit">
+        <h3><span style="font-size:1.2rem">&#9632;</span> Ritが勝てる点</h3>
+        <ul class="strength-list">
+          <li>
+            <span class="bullet">1</span>
+            <span><strong>ツール自体の完成度</strong> &#8212; AppSheet（ノーコード）vs 本格SaaS開発。UI/UX、拡張性、パフォーマンスで圧倒的な差</span>
+          </li>
+          <li>
+            <span class="bullet">2</span>
+            <span><strong>freee/MF直接API連携</strong> &#8212; TaxSys経由ではなく直接連携。データのリアルタイム性と信頼性が高い</span>
+          </li>
+          <li>
+            <span class="bullet">3</span>
+            <span><strong>クライアントポータル</strong> &#8212; so-laboにない最大の差別化ポイント。顧問先との書類・メッセージのやり取りを一元化</span>
+          </li>
+          <li>
+            <span class="bullet">4</span>
+            <span><strong>AI分析・自動レポート生成</strong> &#8212; 収益分析、リスクアラート、顧問料適正化提案。データドリブンな経営支援</span>
+          </li>
+          <li>
+            <span class="bullet">5</span>
+            <span><strong>初期費用0円</strong> &#8212; so-laboは15万円の初期費用が必要。導入のハードルが全く違う</span>
+          </li>
+          <li>
+            <span class="bullet">6</span>
+            <span><strong>モダンなUI/UX</strong> &#8212; プロフェッショナルなSaaSの見た目。若い税理士・スタッフに響く</span>
+          </li>
+          <li>
+            <span class="bullet">7</span>
+            <span><strong>請求管理の内蔵</strong> &#8212; CRM + 請求が一体化。so-laboでは別ツールが必要</span>
+          </li>
+          <li>
+            <span class="bullet">8</span>
+            <span><strong>DM送付機能</strong> &#8212; 既にRitポータルで実装済み。顧問先への一斉連絡が簡単</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 5: Tool Comparison -->
+<section id="tools">
+  <h2 class="section-title">ツール画面比較</h2>
+  <p class="section-subtitle">TaxSys（AI-OCR特化）vs Rit TAX PARTNER（統合プラットフォーム）</p>
+  <div class="section-divider"></div>
+
+  <div class="tool-comparison">
+    <!-- TaxSys -->
+    <div class="tool-card solabo">
+      <div class="tool-header">TaxSys（so-labo）</div>
+      <div class="tool-body">
+        <ul class="tool-feature-list">
+          <li>
+            <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
+            <span><strong>AI-OCR記帳特化</strong> &#8212; 領収書・請求書の読取りに特化したツール</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
+            <span><strong>Gemini 3.0搭載</strong> &#8212; 高速・高精度なOCR処理</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
+            <span><strong>Google Drive統合</strong> &#8212; ファイル管理はGoogle Driveベース</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--yellow)">&#9888;</span>
+            <span><strong>クレジット制</strong> &#8212; 月3,000〜5,000クレジットの上限あり</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
+            <span><strong>仕訳データ連携</strong> &#8212; freee/MFへの仕訳データ出力</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--solabo-accent)">&#9670;</span>
+            <span><strong>スプレッドシート出力</strong> &#8212; データ加工はスプレッドシートで</span>
+          </li>
+        </ul>
+
+        <!-- AppSheet Mock -->
+        <div class="mock-ui">
+          <div class="mock-titlebar">
+            <div class="mock-dot red"></div>
+            <div class="mock-dot yellow"></div>
+            <div class="mock-dot green"></div>
+            <span style="font-size:0.65rem;color:var(--text-light);margin-left:8px">AppSheet / TaxSys</span>
+          </div>
+          <div class="mock-appsheet">
+            <div class="mock-mobile-frame">
+              <div class="mock-mobile-header">TaxSys - OCR結果</div>
+              <div class="mock-mobile-row">
+                <span class="key">取引先</span>
+                <span class="val">ABC商事</span>
+              </div>
+              <div class="mock-mobile-row">
+                <span class="key">日付</span>
+                <span class="val">2026/03/15</span>
+              </div>
+              <div class="mock-mobile-row">
+                <span class="key">金額</span>
+                <span class="val">&yen;54,780</span>
+              </div>
+              <div class="mock-mobile-row">
+                <span class="key">勘定科目</span>
+                <span class="val">消耗品費</span>
+              </div>
+              <div class="mock-mobile-row">
+                <span class="key">税区分</span>
+                <span class="val">課税10%</span>
+              </div>
+              <div style="padding:8px;text-align:center">
+                <span style="font-size:0.55rem;color:var(--text-light)">モバイルアプリ風のUI</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rit -->
+    <div class="tool-card rit">
+      <div class="tool-header">Rit TAX PARTNER</div>
+      <div class="tool-body">
+        <ul class="tool-feature-list">
+          <li>
+            <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
+            <span><strong>CRM+タスク+請求+AI分析の統合プラットフォーム</strong></span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
+            <span><strong>freee/MF直接API連携</strong> &#8212; リアルタイム同期</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
+            <span><strong>ダッシュボードで全体を俯瞰</strong> &#8212; KPIを一目で把握</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
+            <span><strong>カンバンボードで進捗管理</strong> &#8212; 決算月ベースのタスク管理</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--rit-accent)">&#9670;</span>
+            <span><strong>クライアントポータル</strong> &#8212; 顧問先と直接やりとり</span>
+          </li>
+          <li>
+            <span class="feat-icon" style="color:var(--green)">&#10003;</span>
+            <span><strong>使い放題</strong> &#8212; クレジット制限なし</span>
+          </li>
+        </ul>
+
+        <!-- Modern SaaS Mock -->
+        <div class="mock-ui">
+          <div class="mock-titlebar">
+            <div class="mock-dot red"></div>
+            <div class="mock-dot yellow"></div>
+            <div class="mock-dot green"></div>
+            <span style="font-size:0.65rem;color:var(--text-light);margin-left:8px">Rit TAX PARTNER - Dashboard</span>
+          </div>
+          <div class="mock-screen">
+            <div class="mock-dashboard">
+              <div class="mock-widget">
+                <div class="num">156</div>
+                <div class="lbl">顧問先数</div>
+              </div>
+              <div class="mock-widget">
+                <div class="num">23</div>
+                <div class="lbl">今月決算</div>
+              </div>
+              <div class="mock-widget">
+                <div class="num">98%</div>
+                <div class="lbl">完了率</div>
+              </div>
+            </div>
+            <div style="font-size:0.6rem;font-weight:700;color:var(--text-light);margin-bottom:4px">タスク進捗</div>
+            <div class="mock-kanban">
+              <div class="mock-col">
+                <div class="mock-col-title">未着手</div>
+                <div class="mock-task">A社 決算申告</div>
+                <div class="mock-task">B社 月次記帳</div>
+              </div>
+              <div class="mock-col">
+                <div class="mock-col-title">進行中</div>
+                <div class="mock-task" style="border-left-color:var(--yellow)">C社 年末調整</div>
+              </div>
+              <div class="mock-col">
+                <div class="mock-col-title">レビュー</div>
+                <div class="mock-task" style="border-left-color:var(--blue)">D社 決算書</div>
+              </div>
+              <div class="mock-col">
+                <div class="mock-col-title">完了</div>
+                <div class="mock-task" style="border-left-color:var(--green)">E社 確定申告</div>
+                <div class="mock-task" style="border-left-color:var(--green)">F社 月次報告</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section 6: Summary -->
+<section id="summary">
+  <div class="inner">
+    <h2 class="section-title">提案のまとめ</h2>
+    <p class="section-subtitle">ポジショニングと今後のステップ</p>
+    <div class="section-divider" style="background:linear-gradient(90deg, rgba(255,255,255,0.3), #fdba74)"></div>
+
+    <div class="summary-cards">
+      <div class="summary-card">
+        <h3>ポジショニング</h3>
+        <p>so-laboのTAX GROUPは<strong>「ネットワーク型」</strong>。融資実績と会計事務所ネットワークで顧問先を紹介する仕組み。<br><br>Rit TAX PARTNERは<strong>「テクノロジー型」</strong>。ツールの完成度、AI分析、クライアントポータルで事務所の業務効率を根本から変える。</p>
+      </div>
+      <div class="summary-card">
+        <h3>パッケージ構成</h3>
+        <p><strong>ツール x 教育 x 集客</strong>の3本柱でパッケージ化。<br><br>3段階のプランで事務所規模に応じた提供。ツールの完成度と初期費用の設定で、so-laboとの差別化を図る。料金設定は要検討。</p>
+      </div>
+      <div class="summary-card">
+        <h3>開発スケジュール</h3>
+        <p><strong>Phase 1のMVP完成まで2-3ヶ月</strong>。<br><br>CRM + タスク管理 + freee/MF連携の核となる機能を先行リリースし、クライアントポータルやAI分析は段階的に追加。</p>
+      </div>
+      <div class="summary-card">
+        <h3>勝ち筋</h3>
+        <p>so-laboの「ネットワーク」には真っ向勝負しない。<br><br><strong>「ツールとしての圧倒的な完成度」</strong>で差別化。AppSheetでは絶対にできないクライアントポータル・AI分析が最大の武器。</p>
+      </div>
+    </div>
+
+    <div class="next-steps">
+      <h3>次のステップ</h3>
+      <ol>
+        <li><strong>プラン詳細の決定</strong> &#8212; 料金体系、含まれる機能範囲の確定</li>
+        <li><strong>ターゲット顧客の特定</strong> &#8212; 最初に狙うべき会計事務所のプロファイル策定</li>
+        <li><strong>MVP開発着手</strong> &#8212; CRM + タスク管理 + freee/MF連携を最優先で開発</li>
+        <li><strong>パイロットユーザー獲得</strong> &#8212; 3〜5事務所でのテスト運用開始</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-main">株式会社Rit x 株式会社デジタルツール研究所</div>
+  <div>2026年3月24日 打ち合わせ資料 | CONFIDENTIAL</div>
+</footer>
+
+</body>
+</html>
