@@ -10,7 +10,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.2",
     "@types/react": "^19.2.14",
@@ -22,10 +21,22 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "recharts": "^3.8.0",
-    "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2"
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0"
-  }
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Diji-Ken/tax-partner-mock.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Diji-Ken/tax-partner-mock/issues"
+  },
+  "homepage": "https://github.com/Diji-Ken/tax-partner-mock#readme",
+  "description": ""
 }
