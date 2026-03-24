@@ -1,192 +1,229 @@
-"use client";
+'use client';
 
-import React, { useState, useMemo } from "react";
-import { tasks, Task } from "@/data/tasks";
-import { LayoutGrid, List, Plus, X, Calendar, User, Flag } from "lucide-react";
+import React, { useState, useMemo } from 'react';
+import {
+  LayoutGrid,
+  List,
+  Filter,
+  Plus,
+  Calendar,
+  User,
+  ChevronRight,
+} from 'lucide-react';
+import { tasks, type Task } from '@/data/tasks';
 
-const statusColumns = ["未着手", "進行中", "確認待ち", "完了"] as const;
+type ViewMode = 'kanban' | 'list';
 
-const priorityColor: Record<string, string> = {
-  high: "border-l-red-500",
-  medium: "border-l-yellow-500",
-  low: "border-l-green-500",
+const statusColumns: { key: Task['status']; label: string; color: string; dotColor: string }[] = [
+  { key: '\u672A\u7740\u624B', label: '\u672A\u7740\u624B', color: 'bg-slate-50', dotColor: 'bg-slate-400' },
+  { key: '\u9032\u884C\u4E2D', label: '\u9032\u884C\u4E2D', color: 'bg-blue-50', dotColor: 'bg-blue-500' },
+  { key: '\u78BA\u8A8D\u5F85\u3061', label: '\u78BA\u8A8D\u5F85\u3061', color: 'bg-amber-50', dotColor: 'bg-amber-500' },
+  { key: '\u5B8C\u4E86', label: '\u5B8C\u4E86', color: 'bg-emerald-50', dotColor: 'bg-emerald-500' },
+];
+
+const priorityColors: Record<string, string> = {
+  high: 'bg-red-100 text-red-700 border-red-200',
+  medium: 'bg-amber-100 text-amber-700 border-amber-200',
+  low: 'bg-slate-100 text-slate-600 border-slate-200',
 };
-
-const priorityBadge: Record<string, string> = {
-  high: "bg-red-100 text-red-700",
-  medium: "bg-yellow-100 text-yellow-700",
-  low: "bg-green-100 text-green-700",
+const priorityLabels: Record<string, string> = {
+  high: '\u9AD8',
+  medium: '\u4E2D',
+  low: '\u4F4E',
 };
-
-const priorityLabel: Record<string, string> = {
-  high: "高",
-  medium: "中",
-  low: "低",
-};
-
-const statusColor: Record<string, string> = {
-  "未着手": "bg-gray-100 text-gray-700",
-  "進行中": "bg-blue-100 text-blue-700",
-  "確認待ち": "bg-yellow-100 text-yellow-700",
-  "完了": "bg-green-100 text-green-700",
+const priorityBorderColors: Record<string, string> = {
+  high: 'border-l-red-400',
+  medium: 'border-l-amber-400',
+  low: 'border-l-slate-300',
 };
 
 export default function TasksPage() {
-  const [view, setView] = useState<"kanban" | "list">("kanban");
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [filterStaff, setFilterStaff] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterClient, setFilterClient] = useState('');
 
-  const grouped = useMemo(() => {
-    const map: Record<string, Task[]> = {};
-    for (const s of statusColumns) map[s] = [];
-    for (const t of tasks) {
-      if (map[t.status]) map[t.status].push(t);
-    }
-    return map;
-  }, []);
+  const staffList = [...new Set(tasks.map((t) => t.assignedStaff))];
+  const categoryList = [...new Set(tasks.map((t) => t.category))];
+  const clientList = [...new Set(tasks.map((t) => t.clientName))];
+
+  const filtered = useMemo(() => {
+    return tasks.filter((t) => {
+      if (filterStaff && t.assignedStaff !== filterStaff) return false;
+      if (filterCategory && t.category !== filterCategory) return false;
+      if (filterClient && t.clientName !== filterClient) return false;
+      return true;
+    });
+  }, [filterStaff, filterCategory, filterClient]);
 
   return (
-    <div className="p-8">
+    <div className="p-6 max-w-[1400px] mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">タスク管理</h2>
+        <h1 className="text-2xl font-bold text-slate-800">{'\u696D\u52D9\u30DC\u30FC\u30C9'}</h1>
         <div className="flex items-center gap-3">
-          <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <button
-              onClick={() => setView("kanban")}
-              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${view === "kanban" ? "bg-orange-50 text-orange-600" : "text-gray-600 hover:bg-gray-50"}`}
-            >
-              <LayoutGrid size={14} />
-              カンバン
-            </button>
-            <button
-              onClick={() => setView("list")}
-              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${view === "list" ? "bg-orange-50 text-orange-600" : "text-gray-600 hover:bg-gray-50"}`}
-            >
-              <List size={14} />
-              リスト
-            </button>
-          </div>
-          <button
-            onClick={() => setShowTemplateModal(true)}
-            className="flex items-center gap-2 bg-orange-600 text-white rounded-lg px-4 py-2 font-medium hover:bg-orange-700 text-sm"
-          >
-            <Plus size={16} />
-            テンプレートから自動生成
+          <button className="flex items-center gap-2 text-sm text-slate-500 border border-slate-200 rounded-lg px-3 py-2 hover:bg-slate-50 transition-colors">
+            <Filter className="w-3.5 h-3.5" />
+            {'\u30C6\u30F3\u30D7\u30EC\u30FC\u30C8\u304B\u3089\u81EA\u52D5\u751F\u6210'}
+          </button>
+          <button className="flex items-center gap-2 bg-[#ea580c] hover:bg-[#c2410c] text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+            <Plus className="w-4 h-4" />
+            {'\u65B0\u898F\u30BF\u30B9\u30AF'}
           </button>
         </div>
       </div>
 
-      {view === "kanban" ? (
+      {/* View Toggle & Filters */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setViewMode('kanban')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
+              viewMode === 'kanban' ? 'bg-[#ea580c] text-white' : 'text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            {'\u30AB\u30F3\u30D0\u30F3'}
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
+              viewMode === 'list' ? 'bg-[#ea580c] text-white' : 'text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            <List className="w-3.5 h-3.5" />
+            {'\u30EA\u30B9\u30C8'}
+          </button>
+        </div>
+        <select
+          value={filterStaff}
+          onChange={(e) => setFilterStaff(e.target.value)}
+          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+        >
+          <option value="">{'\u62C5\u5F53\u8005'}</option>
+          {staffList.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          value={filterCategory}
+          onChange={(e) => setFilterCategory(e.target.value)}
+          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+        >
+          <option value="">{'\u30BF\u30B9\u30AF\u7A2E\u5225'}</option>
+          {categoryList.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <select
+          value={filterClient}
+          onChange={(e) => setFilterClient(e.target.value)}
+          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+        >
+          <option value="">{'\u9867\u554F\u5148'}</option>
+          {clientList.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Kanban View */}
+      {viewMode === 'kanban' && (
         <div className="grid grid-cols-4 gap-4">
-          {statusColumns.map((status) => (
-            <div key={status} className="bg-gray-50 rounded-xl p-3 min-h-[500px]">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h3 className="text-sm font-semibold text-[#64748b]">{status}</h3>
-                <span className="bg-gray-200 text-gray-600 rounded-full px-2 py-0.5 text-xs font-medium">
-                  {grouped[status].length}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {grouped[status].map((t) => (
-                  <div
-                    key={t.id}
-                    className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 border-l-4 ${priorityColor[t.priority]}`}
-                  >
-                    <p className="text-xs text-[#64748b] mb-1">{t.clientName}</p>
-                    <p className="text-sm font-medium mb-2">{t.title}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs text-[#64748b]">
-                        <Calendar size={12} />
-                        <span>{t.dueDate}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${priorityBadge[t.priority]}`}>
-                          {priorityLabel[t.priority]}
-                        </span>
-                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-medium text-gray-600">
-                          {t.assignedStaff.charAt(0)}
+          {statusColumns.map((col) => {
+            const colTasks = filtered.filter((t) => t.status === col.key);
+            return (
+              <div key={col.key} className="min-h-[400px]">
+                <div className={`rounded-lg ${col.color} p-3`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`w-2.5 h-2.5 rounded-full ${col.dotColor}`} />
+                    <h3 className="text-xs font-bold text-slate-600">{col.label}</h3>
+                    <span className="text-xs text-slate-400 ml-auto">{colTasks.length}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {colTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className={`bg-white rounded-lg p-3.5 shadow-sm border border-slate-100 border-l-4 ${priorityBorderColors[task.priority]} hover:shadow-md transition-shadow cursor-pointer`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <p className="text-xs text-slate-400">{task.clientName}</p>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${priorityColors[task.priority]}`}>
+                            {priorityLabels[task.priority]}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-slate-700 mb-2">{task.title}</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            <span className="text-[11px] text-slate-400">{task.dueDate}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500">
+                              {task.assignedStaff.slice(0, 1)}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full">
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left text-sm text-[#64748b]">
-                <th className="px-4 py-3 font-medium">タスク名</th>
-                <th className="px-4 py-3 font-medium">顧問先</th>
-                <th className="px-4 py-3 font-medium">カテゴリ</th>
-                <th className="px-4 py-3 font-medium">ステータス</th>
-                <th className="px-4 py-3 font-medium">優先度</th>
-                <th className="px-4 py-3 font-medium">担当者</th>
-                <th className="px-4 py-3 font-medium">期限</th>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                {['\u512A\u5148\u5EA6', '\u30BF\u30B9\u30AF', '\u9867\u554F\u5148', '\u30AB\u30C6\u30B4\u30EA', '\u62C5\u5F53', '\u671F\u9650', '\u30B9\u30C6\u30FC\u30BF\u30B9'].map((h) => (
+                  <th key={h} className="text-left py-3 px-4 text-xs font-medium text-slate-500">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {tasks.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium">{t.title}</td>
-                  <td className="px-4 py-3 text-sm">{t.clientName}</td>
-                  <td className="px-4 py-3 text-sm">{t.category}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColor[t.status]}`}>{t.status}</span>
+            <tbody>
+              {filtered.map((task) => (
+                <tr
+                  key={task.id}
+                  className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
+                >
+                  <td className="py-3 px-4">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${priorityColors[task.priority]}`}>
+                      {priorityLabels[task.priority]}
+                    </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${priorityBadge[t.priority]}`}>{priorityLabel[t.priority]}</span>
+                  <td className="py-3 px-4 font-medium text-slate-700">{task.title}</td>
+                  <td className="py-3 px-4 text-slate-500">{task.clientName}</td>
+                  <td className="py-3 px-4">
+                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{task.category}</span>
                   </td>
-                  <td className="px-4 py-3 text-sm">{t.assignedStaff}</td>
-                  <td className="px-4 py-3 text-sm">{t.dueDate}</td>
+                  <td className="py-3 px-4 text-slate-500">{task.assignedStaff}</td>
+                  <td className="py-3 px-4 text-slate-500">{task.dueDate}</td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                        task.status === '\u5B8C\u4E86'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : task.status === '\u9032\u884C\u4E2D'
+                          ? 'bg-blue-100 text-blue-700'
+                          : task.status === '\u78BA\u8A8D\u5F85\u3061'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {task.status}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Template Modal */}
-      {showTemplateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setShowTemplateModal(false)} />
-          <div className="relative bg-white rounded-xl shadow-xl w-[480px]">
-            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">テンプレートからタスク生成</h3>
-              <button onClick={() => setShowTemplateModal(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">テンプレート</label>
-                <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
-                  <option>月次処理テンプレート</option>
-                  <option>決算テンプレート</option>
-                  <option>年末調整テンプレート</option>
-                  <option>法人税申告テンプレート</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">対象顧問先</label>
-                <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
-                  <option>全顧問先</option>
-                  <option>3月決算法人のみ</option>
-                  <option>選択した顧問先</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">対象月</label>
-                <input type="month" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" defaultValue="2026-04" />
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button onClick={() => setShowTemplateModal(false)} className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50">キャンセル</button>
-                <button className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">生成</button>
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </div>

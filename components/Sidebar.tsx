@@ -1,123 +1,102 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
+  Home,
   Users,
-  CheckSquare,
-  ScanLine,
-  GitBranch,
-  Receipt,
-  FolderOpen,
-  BrainCircuit,
+  ClipboardList,
+  BadgeJapaneseYen,
   BookOpen,
-  Building2,
-  Handshake,
-  Monitor,
-  GraduationCap,
-  Link as LinkIcon,
   Settings,
-  User,
-} from "lucide-react";
+  ExternalLink,
+  Sparkles,
+} from 'lucide-react';
 
-const mainNav = [
-  { href: "/", label: "ダッシュボード", icon: LayoutDashboard },
-  { href: "/clients", label: "顧客管理", icon: Users },
-  { href: "/tasks", label: "タスク管理", icon: CheckSquare, badge: 12 },
-  { href: "/bookkeeping", label: "記帳・OCR", icon: ScanLine },
-  { href: "/pipeline", label: "パイプライン", icon: GitBranch },
-  { href: "/billing", label: "請求管理", icon: Receipt },
-  { href: "/documents", label: "ドキュメント", icon: FolderOpen },
+const navItems = [
+  { href: '/', label: 'Home', icon: Home },
+  { href: '/clients', label: 'Clients', icon: Users },
+  { href: '/tasks', label: 'Tasks', icon: ClipboardList },
+  { href: '/revenue', label: 'Revenue', icon: BadgeJapaneseYen },
+  { href: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { href: '/admin', label: 'Admin', icon: Settings },
 ];
 
-const toolNav = [
-  { href: "/ai", label: "AI分析", icon: BrainCircuit, badge: 3 },
-  { href: "/knowledge", label: "ナレッジ管理", icon: BookOpen },
-  { href: "/subsidy", label: "補助金・支援制度", icon: Building2 },
-  { href: "/referrals", label: "紹介・マッチング", icon: Handshake },
-];
-
-const bottomNav = [
-  { href: "/portal", label: "クライアントポータル", icon: Monitor },
-  { href: "/learning", label: "ラーニング", icon: GraduationCap },
-  { href: "/integrations", label: "連携管理", icon: LinkIcon },
-  { href: "/settings", label: "設定", icon: Settings },
-];
-
-const NavItem: React.FC<{
-  href: string;
-  label: string;
-  icon: React.ElementType;
-  badge?: number;
-  active: boolean;
-}> = ({ href, label, icon: Icon, badge, active }) => (
-  <Link
-    href={href}
-    className={`flex items-center gap-3 px-4 py-2.5 text-sm rounded-lg transition-colors relative ${
-      active
-        ? "bg-orange-600/20 text-orange-400 border-l-2 border-orange-500"
-        : "text-gray-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
-    }`}
-  >
-    <Icon size={18} />
-    <span className="flex-1">{label}</span>
-    {badge && (
-      <span className="bg-orange-600 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-        {badge}
-      </span>
-    )}
-  </Link>
-);
+const portalItem = { href: '/portal', label: 'Portal', icon: ExternalLink };
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
 
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
-  };
-
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[260px] flex flex-col" style={{ backgroundColor: "#1a2744" }}>
-      <div className="px-5 py-5 border-b border-white/10">
-        <h1 className="text-lg font-bold text-white">TAX PARTNER</h1>
-        <p className="text-xs text-gray-400 mt-0.5">Powered by Rit</p>
+    <aside className="fixed top-0 left-0 w-[240px] h-screen bg-[#1a2744] text-white flex flex-col z-50">
+      {/* Logo */}
+      <div className="px-5 py-6 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-[#ea580c] flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <div className="text-base font-bold tracking-wide leading-tight">TAX PARTNER</div>
+            <div className="text-[10px] text-white/50 tracking-widest">Powered by Rit</div>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-        <div className="space-y-0.5">
-          {mainNav.map((item) => (
-            <NavItem key={item.href} {...item} active={isActive(item.href)} />
-          ))}
-        </div>
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                isActive
+                  ? 'bg-white/15 text-white'
+                  : 'text-white/60 hover:bg-white/8 hover:text-white/90'
+              }`}
+            >
+              <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+              <span>{item.label === 'Home' ? '\u30DB\u30FC\u30E0' : item.label === 'Clients' ? '\u9867\u554F\u5148' : item.label === 'Tasks' ? '\u696D\u52D9\u30DC\u30FC\u30C9' : item.label === 'Revenue' ? '\u53CE\u76CA\u30FB\u30DE\u30C3\u30C1\u30F3\u30B0' : item.label === 'Knowledge' ? '\u30CA\u30EC\u30C3\u30B8' : item.label === 'Admin' ? '\u7BA1\u7406' : item.label}</span>
+            </Link>
+          );
+        })}
 
-        <div className="border-t border-white/10 my-3" />
+        {/* Divider */}
+        <div className="my-3 border-t border-white/10" />
 
-        <div className="space-y-0.5">
-          {toolNav.map((item) => (
-            <NavItem key={item.href} {...item} active={isActive(item.href)} />
-          ))}
-        </div>
-
-        <div className="border-t border-white/10 my-3" />
-
-        <div className="space-y-0.5">
-          {bottomNav.map((item) => (
-            <NavItem key={item.href} {...item} active={isActive(item.href)} />
-          ))}
-        </div>
+        {/* Portal */}
+        {(() => {
+          const Icon = portalItem.icon;
+          const isActive = pathname.startsWith(portalItem.href);
+          return (
+            <Link
+              href={portalItem.href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                isActive
+                  ? 'bg-[#ea580c]/20 text-[#fb923c]'
+                  : 'text-white/50 hover:bg-white/8 hover:text-white/80'
+              }`}
+            >
+              <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+              <span>{'\u9867\u554F\u5148\u30DE\u30A4\u30DA\u30FC\u30B8'}</span>
+            </Link>
+          );
+        })()}
       </nav>
 
+      {/* User */}
       <div className="px-4 py-4 border-t border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-orange-600/30 flex items-center justify-center">
-            <User size={18} className="text-orange-400" />
+          <div className="w-9 h-9 rounded-full bg-[#ea580c]/80 flex items-center justify-center text-xs font-bold">
+            {'\u5C71\u7530'}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">サンプル会計事務所</p>
-            <p className="text-xs text-gray-400 truncate">山田 太郎 / 管理者</p>
+          <div className="min-w-0">
+            <div className="text-sm font-medium truncate">{'\u30B5\u30F3\u30D7\u30EB\u4F1A\u8A08\u4E8B\u52D9\u6240'}</div>
+            <div className="text-[11px] text-white/40 truncate">{'\u5C71\u7530 \u592A\u90CE / \u7BA1\u7406\u8005'}</div>
           </div>
         </div>
       </div>
