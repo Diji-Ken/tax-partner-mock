@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Users, TrendingUp, Receipt, CheckSquare, AlertTriangle, Lightbulb, ArrowUpRight, Clock, Send, Upload, PlusCircle, CheckCircle2 } from "lucide-react";
+import { Users, TrendingUp, Receipt, CheckSquare, AlertTriangle, Lightbulb, ArrowUpRight, Clock, Send, Upload, PlusCircle, CheckCircle2, Handshake, DollarSign } from "lucide-react";
 import { activities } from "@/data/activities";
 
 const kpis = [
@@ -117,9 +117,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-3 gap-5 mb-8">
         {/* AI Insights */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold mb-4">AIインサイト</h3>
           <div className="space-y-3">
             {aiInsights.map((insight, i) => (
@@ -131,6 +131,29 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Referral Matching Summary */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold mb-4">紹介マッチング</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50">
+              <DollarSign size={18} className="text-green-600 shrink-0" />
+              <div>
+                <p className="text-xs text-[#64748b]">今月の紹介収益</p>
+                <p className="text-lg font-bold text-green-700">¥180,000</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-orange-50">
+              <Handshake size={18} className="text-orange-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-[#64748b]">補助金申請チャンス</p>
+                <p className="text-sm">株式会社フジタ建設にIT導入補助金の案内を推奨</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-5">
         {/* Activities */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold mb-4">最近のアクティビティ</h3>

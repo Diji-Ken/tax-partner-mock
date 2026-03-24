@@ -14,6 +14,7 @@ import {
   BrainCircuit,
   BookOpen,
   Building2,
+  Handshake,
   Monitor,
   GraduationCap,
   Link as LinkIcon,
@@ -35,6 +36,7 @@ const toolNav = [
   { href: "/ai", label: "AI分析", icon: BrainCircuit, badge: 3 },
   { href: "/knowledge", label: "ナレッジ管理", icon: BookOpen },
   { href: "/subsidy", label: "補助金・支援制度", icon: Building2 },
+  { href: "/referrals", label: "紹介・マッチング", icon: Handshake },
 ];
 
 const bottomNav = [

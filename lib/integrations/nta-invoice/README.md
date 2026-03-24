@@ -66,3 +66,89 @@ https://web-api.invoice-kohyo.nta.go.jp
 - JSONレスポンス（type=21）はVer.1.0以降で利用可能
 - 全件データのダウンロードは月次更新（別途ダウンロード機能を利用）
 - 2023年1月20日以降、法人番号公表API用のIDとは別にインボイスAPI用のID発行申請が必要
+
+## 税理士CRM向け拡張機能
+
+### バルク検証機能
+
+顧問先の取引先リスト（数十〜数百件）を一括で検証するための機能。
+
+**特徴:**
+- APIの10件制限を自動バッチ分割
+- 並列リクエスト数制限（デフォルト3、API負荷軽減）
+- キャッシュ活用で重複リクエスト削減
+- フォーマット不正の番号は事前にエラー判定
+
+```typescript
+import { bulkValidate } from './client';
+
+const result = await bulkValidate({
+  numbers: ['T1234567890123', 'T2345678901234', ...], // 50件でもOK
+  day: '2026-03-24',
+  concurrency: 3,
+});
+
+console.log(`有効: ${result.validCount}, 無効: ${result.invalidCount}`);
+console.log(`処理時間: ${result.durationMs}ms`);
+
+// 無効な番号のみ抽出
+const invalidOnes = result.results.filter(r => !r.isValid && !r.error);
+```
+
+### キャッシュ戦略
+
+検証結果をインメモリキャッシュに保存し、同一番号の重複APIコールを削減。
+
+| 設定 | デフォルト値 | 説明 |
+|------|------------|------|
+| TTL | 24時間 | キャッシュ有効期間 |
+| 自動クリーンアップ | なし | `cleanupExpiredCache()` で手動実行 |
+
+```typescript
+import { getCacheStats, setCacheTtl, clearValidationCache, cleanupExpiredCache } from './client';
+
+// キャッシュ有効時間を12時間に変更
+setCacheTtl(12 * 60 * 60 * 1000);
+
+// キャッシュ統計を確認
+const stats = getCacheStats();
+console.log(`ヒット率: ${(stats.hitRate * 100).toFixed(1)}%`);
+
+// 期限切れキャッシュをクリーンアップ
+const removed = cleanupExpiredCache();
+
+// キャッシュを全クリア
+clearValidationCache();
+```
+
+### 更新情報の定期取得
+
+顧問先の取引先が取消・変更されていないかを定期チェック。
+
+```typescript
+import { fetchRecentUpdates, checkWatchedNumbers } from './client';
+
+// 過去1週間の更新を取得
+const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  .toISOString().split('T')[0];
+
+const updates = await fetchRecentUpdates(oneWeekAgo);
+console.log(`新規: ${updates.newRegistrations.length}`);
+console.log(`変更: ${updates.updatedRegistrations.length}`);
+console.log(`取消: ${updates.deletedRegistrations.length}`);
+
+// 顧問先の取引先リストと突合
+const clientNumbers = ['T1234567890123', 'T2345678901234', ...];
+const alerts = checkWatchedNumbers(clientNumbers, updates);
+
+for (const alert of alerts) {
+  console.log(`[${alert.changeType}] ${alert.registrationNumber}: ${alert.announcement.name}`);
+}
+```
+
+### 推奨運用フロー
+
+1. **月次一括検証**: 顧問先の全取引先を `bulkValidate()` で一括チェック
+2. **週次差分チェック**: `fetchRecentUpdates()` + `checkWatchedNumbers()` で変更検知
+3. **日次キャッシュ管理**: `cleanupExpiredCache()` で不要キャッシュを削除
+4. **取消アラート**: 取消された事業者を検知したら顧問先に即時通知
