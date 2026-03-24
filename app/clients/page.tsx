@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Plus,
@@ -26,13 +26,16 @@ import {
   Lightbulb,
   FolderOpen,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
-import { clients, type Client } from '@/data/clients';
-import { tasks } from '@/data/tasks';
+import { clients as demoClients, type Client } from '@/data/clients';
+import { tasks as demoTasks } from '@/data/tasks';
 import { ocrResults } from '@/data/ocr-results';
 import { invoices } from '@/data/invoices';
 import { aiLearningRules } from '@/data/ai-learning-rules';
 import { subsidies } from '@/data/subsidies';
+import { fetchClients, fetchTasks, insertClient } from '@/lib/supabase-helpers';
+import type { Task } from '@/data/tasks';
 
 const softwareLabels: Record<string, string> = {
   freee: 'freee',
@@ -126,27 +129,71 @@ const detailTabs: { key: DetailTab; label: string; icon: React.ElementType }[] =
   { key: 'contact', label: '\u9023\u7D61', icon: MessageSquare },
 ];
 
+// New client form initial state
+const initialNewClient = {
+  name: '',
+  representative: '',
+  type: 'corporate',
+  settlementMonth: 3,
+  accountingSoftware: 'freee',
+  monthlyFee: 30000,
+  phone: '',
+  email: '',
+  industry: '',
+};
+
 export default function ClientsPage() {
+  const [clientsData, setClientsData] = useState<Client[]>(demoClients);
+  const [tasksData, setTasksData] = useState<Task[]>(demoTasks);
+  const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<'demo' | 'supabase'>('demo');
+
   const [search, setSearch] = useState('');
   const [filterMonth, setFilterMonth] = useState<string>('');
   const [filterStaff, setFilterStaff] = useState<string>('');
   const [filterSoftware, setFilterSoftware] = useState<string>('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<DetailTab>('overview');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newClient, setNewClient] = useState(initialNewClient);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [dbClients, dbTasks] = await Promise.all([
+          fetchClients(),
+          fetchTasks(),
+        ]);
+        if (dbClients.length > 0) {
+          setClientsData(dbClients);
+          setDataSource('supabase');
+        }
+        if (dbTasks.length > 0) {
+          setTasksData(dbTasks);
+        }
+      } catch (err) {
+        console.error('Supabase fetch failed, using demo data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const filtered = useMemo(() => {
-    return clients.filter((c) => {
+    return clientsData.filter((c) => {
       if (search && !c.name.includes(search) && !c.representative.includes(search)) return false;
       if (filterMonth && c.settlementMonth !== Number(filterMonth)) return false;
       if (filterStaff && c.assignedStaff !== filterStaff) return false;
       if (filterSoftware && c.accountingSoftware !== filterSoftware) return false;
       return true;
     });
-  }, [search, filterMonth, filterStaff, filterSoftware]);
+  }, [clientsData, search, filterMonth, filterStaff, filterSoftware]);
 
-  const staffList = [...new Set(clients.map((c) => c.assignedStaff))];
+  const staffList = [...new Set(clientsData.map((c) => c.assignedStaff))];
 
-  const clientTasks = selectedClient ? tasks.filter((t) => t.clientId === selectedClient.id) : [];
+  const clientTasks = selectedClient ? tasksData.filter((t) => t.clientId === selectedClient.id) : [];
   const clientInvoices = selectedClient ? invoices.filter((i) => i.clientId === selectedClient.id) : [];
   const clientOcr = selectedClient ? ocrResults.filter((o) => o.clientName === selectedClient?.name) : [];
   const clientRules = selectedClient ? aiLearningRules.filter((r) => r.clientName === selectedClient?.name) : [];
@@ -154,12 +201,65 @@ export default function ClientsPage() {
   const completedMonthlySteps = monthlySteps.filter((s) => s.done).length;
   const progressPercent = Math.round((completedMonthlySteps / monthlySteps.length) * 100);
 
+  const handleAddClient = async () => {
+    setSaving(true);
+    try {
+      if (dataSource === 'supabase') {
+        const success = await insertClient(newClient);
+        if (success) {
+          // Reload clients from DB
+          const dbClients = await fetchClients();
+          if (dbClients.length > 0) {
+            setClientsData(dbClients);
+          }
+        }
+      } else {
+        // Demo mode: add locally
+        const localClient: Client = {
+          id: String(clientsData.length + 1),
+          name: newClient.name,
+          representative: newClient.representative,
+          settlementMonth: newClient.settlementMonth,
+          accountingSoftware: newClient.accountingSoftware as Client['accountingSoftware'],
+          monthlyFee: newClient.monthlyFee,
+          assignedStaff: '\u5C71\u7530\u592A\u90CE',
+          status: 'active',
+          rank: 'B',
+          type: newClient.type as Client['type'],
+          phone: newClient.phone,
+          email: newClient.email,
+          industry: newClient.industry,
+          registeredDate: new Date().toISOString().split('T')[0],
+        };
+        setClientsData((prev) => [...prev, localClient]);
+      }
+      setShowAddModal(false);
+      setNewClient(initialNewClient);
+    } catch (err) {
+      console.error('Failed to add client:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">{'\u9867\u554F\u5148'}</h1>
-        <button className="flex items-center gap-2 bg-[#ea580c] hover:bg-[#c2410c] text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-slate-800">{'\u9867\u554F\u5148'}</h1>
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+          ) : (
+            <span className={`text-xs px-2 py-0.5 rounded-full ${dataSource === 'supabase' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+              {dataSource === 'supabase' ? `Supabase (${clientsData.length}\u4EF6)` : `\u30C7\u30E2 (${clientsData.length}\u4EF6)`}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 bg-[#ea580c] hover:bg-[#c2410c] text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
+        >
           <Plus className="w-4 h-4" />
           {'\u65B0\u898F\u767B\u9332'}
         </button>
@@ -218,7 +318,7 @@ export default function ClientsPage() {
       {/* Card Grid */}
       <div className="grid grid-cols-3 gap-4">
         {filtered.map((client) => {
-          const clientTasksForCard = tasks.filter(
+          const clientTasksForCard = tasksData.filter(
             (t) => t.clientId === client.id && t.status !== '\u5B8C\u4E86'
           );
           const hasAlert = clientTasksForCard.some((t) => t.priority === 'high');
@@ -288,6 +388,125 @@ export default function ClientsPage() {
         })}
       </div>
 
+      {/* ========= ADD CLIENT MODAL ========= */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowAddModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[560px] max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-800">{'\u65B0\u898F\u9867\u554F\u5148\u767B\u9332'}</h2>
+              <button onClick={() => setShowAddModal(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4F1A\u793E\u540D'} *</label>
+                <input
+                  type="text"
+                  value={newClient.name}
+                  onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                  placeholder={'\u682A\u5F0F\u4F1A\u793E\u25CB\u25CB'}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4EE3\u8868\u8005\u540D'}</label>
+                  <input
+                    type="text"
+                    value={newClient.representative}
+                    onChange={(e) => setNewClient({ ...newClient, representative: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u696D\u7A2E'}</label>
+                  <input
+                    type="text"
+                    value={newClient.industry}
+                    onChange={(e) => setNewClient({ ...newClient, industry: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u6C7A\u7B97\u6708'}</label>
+                  <select
+                    value={newClient.settlementMonth}
+                    onChange={(e) => setNewClient({ ...newClient, settlementMonth: Number(e.target.value) })}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                  >
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
+                      <option key={m} value={m}>{m}{'\u6708'}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4F1A\u8A08\u30BD\u30D5\u30C8'}</label>
+                  <select
+                    value={newClient.accountingSoftware}
+                    onChange={(e) => setNewClient({ ...newClient, accountingSoftware: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                  >
+                    <option value="freee">freee</option>
+                    <option value="MF">MF</option>
+                    <option value="yayoi">{'\u5F25\u751F'}</option>
+                    <option value="other">{'\u305D\u306E\u4ED6'}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u6708\u984D\u9867\u554F\u6599'}</label>
+                  <input
+                    type="number"
+                    value={newClient.monthlyFee}
+                    onChange={(e) => setNewClient({ ...newClient, monthlyFee: Number(e.target.value) })}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u96FB\u8A71\u756A\u53F7'}</label>
+                  <input
+                    type="text"
+                    value={newClient.phone}
+                    onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u30E1\u30FC\u30EB'}</label>
+                  <input
+                    type="email"
+                    value={newClient.email}
+                    onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-sm text-slate-500 border border-slate-200 rounded-lg px-4 py-2 hover:bg-slate-50"
+              >
+                {'\u30AD\u30E3\u30F3\u30BB\u30EB'}
+              </button>
+              <button
+                onClick={handleAddClient}
+                disabled={!newClient.name || saving}
+                className="flex items-center gap-2 bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {saving ? '\u4FDD\u5B58\u4E2D...' : '\u767B\u9332'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Detail Slide Panel */}
       {selectedClient && (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -308,7 +527,7 @@ export default function ClientsPage() {
                 <div className="flex items-center gap-3">
                   <div className="text-right text-xs text-slate-500">
                     <p>{'\u6C7A\u7B97'} {selectedClient.settlementMonth}{'\u6708'} | {softwareLabels[selectedClient.accountingSoftware]}</p>
-                    <p>{'\u6708\u984D'} \u00A5{selectedClient.monthlyFee.toLocaleString()}</p>
+                    <p>{'\u6708\u984D'} {'\u00A5'}{selectedClient.monthlyFee.toLocaleString()}</p>
                   </div>
                   <button className="text-xs text-[#ea580c] border border-[#ea580c] rounded-lg px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors whitespace-nowrap">
                     <ExternalLink className="w-3 h-3 inline mr-1" />
@@ -401,6 +620,28 @@ export default function ClientsPage() {
                       </div>
                     </div>
                   </div>
+                  {/* Active tasks for this client */}
+                  {clientTasks.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-700 mb-3">{'\u30BF\u30B9\u30AF\u4E00\u89A7'}</h3>
+                      <div className="space-y-1.5">
+                        {clientTasks.map((task) => (
+                          <div key={task.id} className="flex items-center gap-3 py-2 px-3 bg-slate-50 rounded-lg">
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              task.status === '\u5B8C\u4E86' ? 'bg-emerald-100 text-emerald-700' :
+                              task.status === '\u9032\u884C\u4E2D' ? 'bg-blue-100 text-blue-700' :
+                              task.status === '\u78BA\u8A8D\u5F85\u3061' ? 'bg-amber-100 text-amber-700' :
+                              'bg-slate-100 text-slate-600'
+                            }`}>
+                              {task.status}
+                            </span>
+                            <span className="text-sm text-slate-700 flex-1">{task.title}</span>
+                            <span className="text-xs text-slate-400">{task.dueDate}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {/* AI Suggestions */}
                   <div className="border-l-4 border-[#ea580c] bg-[#fff7ed] rounded-r-lg p-4">
                     <div className="flex items-center gap-2 mb-2">

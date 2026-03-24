@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   TrendingUp,
@@ -13,10 +13,14 @@ import {
   ChevronRight,
   Clock,
   Lightbulb,
+  Loader2,
 } from 'lucide-react';
-import { tasks } from '@/data/tasks';
+import { tasks as demoTasks } from '@/data/tasks';
 import { activities } from '@/data/activities';
-import { clients } from '@/data/clients';
+import { clients as demoClients } from '@/data/clients';
+import { fetchClients, fetchTasks } from '@/lib/supabase-helpers';
+import type { Client } from '@/data/clients';
+import type { Task } from '@/data/tasks';
 import {
   BarChart,
   Bar,
@@ -27,45 +31,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-
-const kpis = [
-  {
-    label: '\u9867\u554F\u5148\u6570',
-    value: '48',
-    sub: '\u6CD5\u4EBA 42 / \u500B\u4EBA 6',
-    icon: Users,
-    color: 'bg-blue-500',
-    bgColor: 'bg-blue-50',
-    textColor: 'text-blue-600',
-  },
-  {
-    label: '\u6708\u6B21\u9032\u6357\u7387',
-    value: '72%',
-    sub: '35/48\u793E \u5B8C\u4E86',
-    icon: TrendingUp,
-    color: 'bg-emerald-500',
-    bgColor: 'bg-emerald-50',
-    textColor: 'text-emerald-600',
-  },
-  {
-    label: '\u4ECA\u6708\u8ACB\u6C42\u984D',
-    value: '\u00A54.2M',
-    sub: '\u5165\u91D1\u6E08 68%',
-    icon: Receipt,
-    color: 'bg-violet-500',
-    bgColor: 'bg-violet-50',
-    textColor: 'text-violet-600',
-  },
-  {
-    label: '\u7D39\u4ECB\u53CE\u76CA',
-    value: '\u00A5180K',
-    sub: '\u524D\u6708\u6BD4 +23%',
-    icon: Sparkles,
-    color: 'bg-[#ea580c]',
-    bgColor: 'bg-orange-50',
-    textColor: 'text-[#ea580c]',
-  },
-];
 
 const aiAlerts = [
   {
@@ -133,7 +98,80 @@ const typeIcons: Record<string, string> = {
 };
 
 export default function HomePage() {
-  const todayTasks = tasks
+  const [clientsData, setClientsData] = useState<Client[]>(demoClients);
+  const [tasksData, setTasksData] = useState<Task[]>(demoTasks);
+  const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<'demo' | 'supabase'>('demo');
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [dbClients, dbTasks] = await Promise.all([
+          fetchClients(),
+          fetchTasks(),
+        ]);
+        if (dbClients.length > 0) {
+          setClientsData(dbClients);
+          setDataSource('supabase');
+        }
+        if (dbTasks.length > 0) {
+          setTasksData(dbTasks);
+        }
+      } catch (err) {
+        console.error('Supabase fetch failed, using demo data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const activeClients = clientsData.filter((c) => c.status === 'active');
+  const corporateCount = activeClients.filter((c) => c.type === 'corporate').length;
+  const individualCount = activeClients.filter((c) => c.type === 'individual').length;
+  const completedTasks = tasksData.filter((t) => t.status === '\u5B8C\u4E86').length;
+  const totalMonthlyFee = activeClients.reduce((sum, c) => sum + c.monthlyFee, 0);
+
+  const kpis = [
+    {
+      label: '\u9867\u554F\u5148\u6570',
+      value: String(activeClients.length),
+      sub: `\u6CD5\u4EBA ${corporateCount} / \u500B\u4EBA ${individualCount}`,
+      icon: Users,
+      color: 'bg-blue-500',
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600',
+    },
+    {
+      label: '\u6708\u6B21\u9032\u6357\u7387',
+      value: tasksData.length > 0 ? `${Math.round((completedTasks / tasksData.length) * 100)}%` : '0%',
+      sub: `${completedTasks}/${tasksData.length}\u793E \u5B8C\u4E86`,
+      icon: TrendingUp,
+      color: 'bg-emerald-500',
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-600',
+    },
+    {
+      label: '\u4ECA\u6708\u8ACB\u6C42\u984D',
+      value: `\u00A5${(totalMonthlyFee / 1000).toFixed(0)}K`,
+      sub: `${activeClients.length}\u793E\u5206`,
+      icon: Receipt,
+      color: 'bg-violet-500',
+      bgColor: 'bg-violet-50',
+      textColor: 'text-violet-600',
+    },
+    {
+      label: '\u7D39\u4ECB\u53CE\u76CA',
+      value: '\u00A5180K',
+      sub: '\u524D\u6708\u6BD4 +23%',
+      icon: Sparkles,
+      color: 'bg-[#ea580c]',
+      bgColor: 'bg-orange-50',
+      textColor: 'text-[#ea580c]',
+    },
+  ];
+
+  const todayTasks = tasksData
     .filter((t) => t.status !== '\u5B8C\u4E86')
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 5);
@@ -142,10 +180,24 @@ export default function HomePage() {
     <div className="p-6 max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">{'\u30DB\u30FC\u30E0'}</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          {'\u304A\u306F\u3088\u3046\u3054\u3056\u3044\u307E\u3059\u3001\u5C71\u7530\u3055\u3093\u3002\u4ECA\u65E5\u306E\u696D\u52D9\u72B6\u6CC1\u3067\u3059\u3002'}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">{'\u30DB\u30FC\u30E0'}</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              {'\u304A\u306F\u3088\u3046\u3054\u3056\u3044\u307E\u3059\u3001\u5C71\u7530\u3055\u3093\u3002\u4ECA\u65E5\u306E\u696D\u52D9\u72B6\u6CC1\u3067\u3059\u3002'}
+            </p>
+          </div>
+          {loading ? (
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {'\u30C7\u30FC\u30BF\u8AAD\u307F\u8FBC\u307F\u4E2D...'}
+            </div>
+          ) : (
+            <span className={`text-xs px-2.5 py-1 rounded-full ${dataSource === 'supabase' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+              {dataSource === 'supabase' ? 'Supabase\u63A5\u7D9A\u4E2D' : '\u30C7\u30E2\u30C7\u30FC\u30BF'}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* KPI Cards */}

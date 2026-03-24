@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   LayoutGrid,
   List,
@@ -9,8 +9,10 @@ import {
   Calendar,
   User,
   ChevronRight,
+  Loader2,
 } from 'lucide-react';
-import { tasks, type Task } from '@/data/tasks';
+import { tasks as demoTasks, type Task } from '@/data/tasks';
+import { fetchTasks, updateTaskStatus } from '@/lib/supabase-helpers';
 
 type ViewMode = 'kanban' | 'list';
 
@@ -38,29 +40,73 @@ const priorityBorderColors: Record<string, string> = {
 };
 
 export default function TasksPage() {
+  const [tasksData, setTasksData] = useState<Task[]>(demoTasks);
+  const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<'demo' | 'supabase'>('demo');
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [filterStaff, setFilterStaff] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterClient, setFilterClient] = useState('');
 
-  const staffList = [...new Set(tasks.map((t) => t.assignedStaff))];
-  const categoryList = [...new Set(tasks.map((t) => t.category))];
-  const clientList = [...new Set(tasks.map((t) => t.clientName))];
+  useEffect(() => {
+    async function loadTasks() {
+      try {
+        const dbTasks = await fetchTasks();
+        if (dbTasks.length > 0) {
+          setTasksData(dbTasks);
+          setDataSource('supabase');
+        }
+      } catch (err) {
+        console.error('Supabase fetch failed, using demo data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTasks();
+  }, []);
+
+  const staffList = [...new Set(tasksData.map((t) => t.assignedStaff))];
+  const categoryList = [...new Set(tasksData.map((t) => t.category))];
+  const clientList = [...new Set(tasksData.map((t) => t.clientName))];
 
   const filtered = useMemo(() => {
-    return tasks.filter((t) => {
+    return tasksData.filter((t) => {
       if (filterStaff && t.assignedStaff !== filterStaff) return false;
       if (filterCategory && t.category !== filterCategory) return false;
       if (filterClient && t.clientName !== filterClient) return false;
       return true;
     });
-  }, [filterStaff, filterCategory, filterClient]);
+  }, [tasksData, filterStaff, filterCategory, filterClient]);
+
+  const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
+    if (dataSource === 'supabase') {
+      const success = await updateTaskStatus(taskId, newStatus);
+      if (success) {
+        setTasksData((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+        );
+      }
+    } else {
+      setTasksData((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+      );
+    }
+  };
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">{'\u696D\u52D9\u30DC\u30FC\u30C9'}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-slate-800">{'\u696D\u52D9\u30DC\u30FC\u30C9'}</h1>
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+          ) : (
+            <span className={`text-xs px-2 py-0.5 rounded-full ${dataSource === 'supabase' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+              {dataSource === 'supabase' ? 'Supabase' : '\u30C7\u30E2'}
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 text-sm text-slate-500 border border-slate-200 rounded-lg px-3 py-2 hover:bg-slate-50 transition-colors">
             <Filter className="w-3.5 h-3.5" />
