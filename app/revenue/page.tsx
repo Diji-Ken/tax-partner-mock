@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
   Handshake,
@@ -13,17 +13,19 @@ import {
   Sparkles,
   Users,
   Target,
+  Loader2,
 } from 'lucide-react';
 import {
-  referralPartners,
-  referralDeals,
+  referralPartners as demoPartners,
+  referralDeals as demoDeals,
   categoryLabels,
   monthlyReferralRevenue,
   categoryRevenue,
   type ReferralCategory,
 } from '@/data/referrals';
-import { subsidies, sourceLabels, sourceBadgeColors, sourceDbCounts, type SubsidySource } from '@/data/subsidies';
+import { subsidies as demoSubsidies, sourceLabels, sourceBadgeColors, sourceDbCounts, type SubsidySource } from '@/data/subsidies';
 import { pipelineItems } from '@/data/pipeline';
+import { supabase } from '@/lib/supabase';
 import {
   BarChart,
   Bar,
@@ -89,12 +91,83 @@ const sourceSummary: { source: SubsidySource; label: string; count: string }[] =
   { source: 'joseikin-now', label: '\u52A9\u6210\u91D1\u306A\u3046', count: sourceDbCounts['joseikin-now'] },
 ];
 
+interface DbPartner {
+  id: string;
+  name: string;
+  category: string | null;
+  commission_type: string | null;
+  commission_value: string | null;
+  status: string;
+}
+interface DbDeal {
+  id: string;
+  client_id: string;
+  partner_id: string;
+  status: string;
+  amount: number | null;
+  commission: number | null;
+  note: string | null;
+  created_at: string;
+  clients?: { name: string };
+  partner?: { name: string; category: string | null };
+}
+
 export default function RevenuePage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [subsidyRegion, setSubsidyRegion] = useState('');
   const [subsidyStatus, setSubsidyStatus] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<'demo' | 'supabase'>('demo');
 
-  const filteredSubsidies = subsidies.filter((s) => {
+  const [partners, setPartners] = useState(demoPartners);
+  const [deals, setDeals] = useState(demoDeals);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!supabase) { setLoading(false); return; }
+      try {
+        const [partnersRes, dealsRes] = await Promise.all([
+          supabase.from('referral_partners').select('*').order('created_at'),
+          supabase.from('referral_deals').select('*, clients:client_id(name), partner:partner_id(name, category)').order('created_at', { ascending: false }),
+        ]);
+
+        if (partnersRes.data && partnersRes.data.length > 0) {
+          setPartners(partnersRes.data.map((p: DbPartner) => ({
+            id: p.id,
+            name: p.name,
+            category: (p.category || 'business_match') as ReferralCategory,
+            description: '',
+            commission: p.commission_value || '-',
+            status: p.status as any,
+            deals: 0,
+            totalRevenue: 0,
+          })));
+          setDataSource('supabase');
+        }
+
+        if (dealsRes.data && dealsRes.data.length > 0) {
+          setDeals(dealsRes.data.map((d: DbDeal) => ({
+            id: d.id,
+            clientName: d.clients?.name || '-',
+            partnerName: d.partner?.name || '-',
+            category: (d.partner?.category || 'business_match') as ReferralCategory,
+            status: d.status as any,
+            amount: d.amount || 0,
+            commission: d.commission || 0,
+            date: d.created_at?.slice(0, 10) || '',
+            note: d.note || '',
+          })));
+        }
+      } catch (err) {
+        console.error('Revenue data fetch failed, using demo:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const filteredSubsidies = demoSubsidies.filter((s) => {
     if (subsidyRegion && s.region !== subsidyRegion) return false;
     if (subsidyStatus && s.status !== subsidyStatus) return false;
     return true;
@@ -102,7 +175,16 @@ export default function RevenuePage() {
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">{'\u53CE\u76CA\u30FB\u30DE\u30C3\u30C1\u30F3\u30B0'}</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-2xl font-bold text-slate-800">{'\u53CE\u76CA\u30FB\u30DE\u30C3\u30C1\u30F3\u30B0'}</h1>
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+        ) : (
+          <span className={`text-xs px-2 py-0.5 rounded-full ${dataSource === 'supabase' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+            {dataSource === 'supabase' ? 'Supabase' : '\u30C7\u30E2'}
+          </span>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-slate-200">
@@ -128,7 +210,6 @@ export default function RevenuePage() {
       {/* ========= DASHBOARD TAB ========= */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
-          {/* KPIs */}
           <div className="grid grid-cols-4 gap-4">
             {dashboardKpis.map((kpi) => {
               const Icon = kpi.icon;
@@ -147,7 +228,6 @@ export default function RevenuePage() {
               );
             })}
           </div>
-          {/* Charts */}
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
               <h3 className="text-sm font-bold text-slate-700 mb-4">{'\u6708\u5225\u7D39\u4ECB\u53CE\u76CA'}</h3>
@@ -179,11 +259,9 @@ export default function RevenuePage() {
                       labelLine={false}
                       fontSize={10}
                     >
-                      {categoryRevenue
-                        .filter((c) => c.value > 0)
-                        .map((entry) => (
-                          <Cell key={entry.name} fill={entry.fill} />
-                        ))}
+                      {categoryRevenue.filter((c) => c.value > 0).map((entry) => (
+                        <Cell key={entry.name} fill={entry.fill} />
+                      ))}
                     </Pie>
                     <Tooltip formatter={(v) => `\u00A5${Number(v).toLocaleString()}`} contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }} />
                   </PieChart>
@@ -197,61 +275,36 @@ export default function RevenuePage() {
       {/* ========= SUBSIDY TAB ========= */}
       {activeTab === 'subsidy' && (
         <div className="space-y-6">
-          {/* Data source summary */}
           <div className="grid grid-cols-3 gap-4">
             {sourceSummary.map((src) => (
               <div key={src.source} className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${sourceBadgeColors[src.source]}`}>
-                    {src.label}
-                  </span>
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${sourceBadgeColors[src.source]}`}>{src.label}</span>
                 </div>
                 <p className="text-lg font-bold text-slate-800">{src.count}</p>
               </div>
             ))}
           </div>
-          {/* Filters */}
           <div className="flex gap-3">
-            <select
-              value={subsidyRegion}
-              onChange={(e) => setSubsidyRegion(e.target.value)}
-              className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
-            >
+            <select value={subsidyRegion} onChange={(e) => setSubsidyRegion(e.target.value)} className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30">
               <option value="">{'\u5730\u57DF'}</option>
-              {['\u5168\u56FD', '\u57FC\u7389\u770C', '\u6771\u4EAC\u90FD', '\u5927\u962A\u5E9C', '\u611B\u77E5\u770C', '\u798F\u5CA1\u770C'].map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
+              {['\u5168\u56FD', '\u57FC\u7389\u770C', '\u6771\u4EAC\u90FD', '\u5927\u962A\u5E9C', '\u611B\u77E5\u770C', '\u798F\u5CA1\u770C'].map((r) => (<option key={r} value={r}>{r}</option>))}
             </select>
-            <select
-              value={subsidyStatus}
-              onChange={(e) => setSubsidyStatus(e.target.value)}
-              className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
-            >
+            <select value={subsidyStatus} onChange={(e) => setSubsidyStatus(e.target.value)} className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30">
               <option value="">{'\u30B9\u30C6\u30FC\u30BF\u30B9'}</option>
-              {['\u52DF\u96C6\u4E2D', '\u8FD1\u65E5\u516C\u958B', '\u7A0E\u5236', '\u5171\u6E08'].map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
+              {['\u52DF\u96C6\u4E2D', '\u8FD1\u65E5\u516C\u958B', '\u7A0E\u5236', '\u5171\u6E08'].map((s) => (<option key={s} value={s}>{s}</option>))}
             </select>
           </div>
-          {/* Cards */}
           <div className="grid grid-cols-2 gap-4">
             {filteredSubsidies.slice(0, 8).map((sub) => (
               <div key={sub.id} className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${sourceBadgeColors[sub.source]}`}>
-                      {sourceLabels[sub.source]}
-                    </span>
-                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
-                      sub.status === '\u52DF\u96C6\u4E2D' ? 'bg-emerald-100 text-emerald-700' : sub.status === '\u8FD1\u65E5\u516C\u958B' ? 'bg-blue-100 text-blue-700' : sub.status === '\u7A0E\u5236' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {sub.status}
-                    </span>
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${sourceBadgeColors[sub.source]}`}>{sourceLabels[sub.source]}</span>
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${sub.status === '\u52DF\u96C6\u4E2D' ? 'bg-emerald-100 text-emerald-700' : sub.status === '\u8FD1\u65E5\u516C\u958B' ? 'bg-blue-100 text-blue-700' : sub.status === '\u7A0E\u5236' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'}`}>{sub.status}</span>
                     <span className="text-[10px] text-slate-400">{sub.region}</span>
                   </div>
-                  <button className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-2.5 py-1 hover:bg-[#ea580c] hover:text-white transition-colors whitespace-nowrap">
-                    {'\u9867\u554F\u5148\u306B\u6848\u5185'}
-                  </button>
+                  <button className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-2.5 py-1 hover:bg-[#ea580c] hover:text-white transition-colors whitespace-nowrap">{'\u9867\u554F\u5148\u306B\u6848\u5185'}</button>
                 </div>
                 <h3 className="text-sm font-bold text-slate-700 mb-1">{sub.name}</h3>
                 <p className="text-xs text-slate-500 mb-2 line-clamp-2">{sub.description}</p>
@@ -268,21 +321,16 @@ export default function RevenuePage() {
       {/* ========= REFERRAL TAB ========= */}
       {activeTab === 'referral' && (
         <div className="space-y-6">
-          {/* Partner cards */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-700">{'\u30D1\u30FC\u30C8\u30CA\u30FC\u4E00\u89A7'}</h3>
-              <button className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">
-                {'\u65B0\u898F\u7D39\u4ECB'}
-              </button>
+              <button className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">{'\u65B0\u898F\u7D39\u4ECB'}</button>
             </div>
             <div className="grid grid-cols-4 gap-3">
-              {referralPartners.map((partner) => (
+              {partners.map((partner) => (
                 <div key={partner.id} className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer">
                   <h4 className="text-sm font-bold text-slate-700 truncate mb-1">{partner.name}</h4>
-                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                    {categoryLabels[partner.category]}
-                  </span>
+                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{categoryLabels[partner.category] || partner.category}</span>
                   <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
                     <span>{partner.deals}{'\u4EF6'}</span>
                     <span>{partner.totalRevenue > 0 ? `\u00A5${partner.totalRevenue.toLocaleString()}` : '-'}</span>
@@ -291,7 +339,6 @@ export default function RevenuePage() {
               ))}
             </div>
           </div>
-          {/* Deals table */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-700">{'\u7D39\u4ECB\u6848\u4EF6'}</h3>
@@ -305,24 +352,18 @@ export default function RevenuePage() {
                 </tr>
               </thead>
               <tbody>
-                {referralDeals.map((deal) => (
+                {deals.map((deal) => (
                   <tr key={deal.id} className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer">
                     <td className="py-2.5 px-4 text-slate-700">{deal.clientName}</td>
                     <td className="py-2.5 px-4 text-slate-500">{deal.partnerName}</td>
                     <td className="py-2.5 px-4">
-                      <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                        {categoryLabels[deal.category]}
-                      </span>
+                      <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{categoryLabels[deal.category] || deal.category}</span>
                     </td>
                     <td className="py-2.5 px-4 text-slate-700">{'\u00A5'}{deal.amount.toLocaleString()}</td>
-                    <td className="py-2.5 px-4 text-slate-500">
-                      {deal.commission > 0 ? `\u00A5${deal.commission.toLocaleString()}` : '-'}
-                    </td>
+                    <td className="py-2.5 px-4 text-slate-500">{deal.commission > 0 ? `\u00A5${deal.commission.toLocaleString()}` : '-'}</td>
                     <td className="py-2.5 px-4 text-slate-400">{deal.date}</td>
                     <td className="py-2.5 px-4">
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${dealStatusColors[deal.status]}`}>
-                        {dealStatusLabels[deal.status]}
-                      </span>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${dealStatusColors[deal.status] || 'bg-slate-100 text-slate-600'}`}>{dealStatusLabels[deal.status] || deal.status}</span>
                     </td>
                   </tr>
                 ))}

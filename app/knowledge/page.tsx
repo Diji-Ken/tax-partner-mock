@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BookOpen,
   Calculator,
@@ -20,11 +20,13 @@ import {
   X,
   Sparkles,
   Play,
+  Loader2,
 } from 'lucide-react';
-import { accounts } from '@/data/knowledge/accounts';
+import { accounts as demoAccounts } from '@/data/knowledge/accounts';
 import { taxCalendar } from '@/data/knowledge/tax-calendar';
 import { officeRules } from '@/data/knowledge/office-rules';
-import { aiLearningRules } from '@/data/ai-learning-rules';
+import { aiLearningRules as demoLearningRules } from '@/data/ai-learning-rules';
+import { supabase } from '@/lib/supabase';
 
 type Tab = 'tax' | 'rules' | 'learning';
 
@@ -54,7 +56,6 @@ const courses = [
   { title: '\u88DC\u52A9\u91D1\u30FB\u52A9\u6210\u91D1\u5165\u9580', progress: 0, lessons: 8, description: '\u9867\u554F\u5148\u3078\u306E\u88DC\u52A9\u91D1\u63D0\u6848\u30B9\u30AD\u30EB' },
 ];
 
-/* Reporting fee table */
 const feeTable = [
   { service: '\u6708\u6B21\u9867\u554F\u6599\uFF08\u500B\u4EBA\uFF09', price: '\u00A520,000\uFF5E' },
   { service: '\u6708\u6B21\u9867\u554F\u6599\uFF08\u6CD5\u4EBA\uFF09', price: '\u00A530,000\uFF5E' },
@@ -63,15 +64,107 @@ const feeTable = [
   { service: '\u5E74\u672B\u8ABF\u6574', price: '\u00A510,000/\u4EBA' },
 ];
 
+interface DbCustomAccount {
+  id: string;
+  code: string;
+  name: string;
+  category: string | null;
+  tax_category: string | null;
+  description: string | null;
+}
+
+interface DbJournalRule {
+  id: string;
+  client_id: string | null;
+  condition_type: string;
+  condition_value: string;
+  debit_account: string;
+  confidence: number;
+  applied_count: number;
+  status: string;
+}
+
+interface DbTaskTemplate {
+  id: string;
+  template_id: string;
+  category: string;
+  title: string;
+  description: string | null;
+}
+
 type ModalContent = string | null;
 
 export default function KnowledgePage() {
   const [activeTab, setActiveTab] = useState<Tab>('tax');
   const [modalContent, setModalContent] = useState<ModalContent>(null);
+  const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<'demo' | 'supabase'>('demo');
+
+  const [customAccounts, setCustomAccounts] = useState<DbCustomAccount[]>([]);
+  const [globalRules, setGlobalRules] = useState<DbJournalRule[]>([]);
+  const [taskTemplates, setTaskTemplates] = useState<DbTaskTemplate[]>([]);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!supabase) { setLoading(false); return; }
+      try {
+        const [accountsRes, rulesRes, templatesRes] = await Promise.all([
+          supabase.from('custom_accounts').select('*').order('code'),
+          supabase.from('ai_journal_rules').select('*').is('client_id', null).order('created_at'),
+          supabase.from('task_templates').select('*').order('sort_order'),
+        ]);
+
+        if (accountsRes.data && accountsRes.data.length > 0) {
+          setCustomAccounts(accountsRes.data);
+          setDataSource('supabase');
+        }
+        if (rulesRes.data) {
+          setGlobalRules(rulesRes.data);
+        }
+        if (templatesRes.data) {
+          setTaskTemplates(templatesRes.data);
+        }
+      } catch (err) {
+        console.error('Knowledge data fetch failed, using demo:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Use DB accounts or demo
+  const accountsDisplay = customAccounts.length > 0
+    ? customAccounts.map((a) => ({ code: a.code, name: a.name, category: a.category || '', taxType: a.tax_category || '', description: a.description || '' }))
+    : demoAccounts;
+
+  // Global journal rules display
+  const globalRulesDisplay = globalRules.length > 0
+    ? globalRules.map((r) => ({
+        id: r.id,
+        clientName: '\u4E8B\u52D9\u6240\u5171\u901A',
+        condition: `${r.condition_type}: ${r.condition_value}`,
+        action: '',
+        account: r.debit_account,
+        status: r.status === 'approved' ? '\u627F\u8A8D\u6E08' as const : r.status === 'review' ? '\u8981\u78BA\u8A8D' as const : '\u65B0\u898F\u5019\u88DC' as const,
+        confidence: Math.round(r.confidence * 100),
+        appliedCount: r.applied_count,
+        lastApplied: '',
+      }))
+    : demoLearningRules;
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">{'\u30CA\u30EC\u30C3\u30B8'}</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-2xl font-bold text-slate-800">{'\u30CA\u30EC\u30C3\u30B8'}</h1>
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+        ) : (
+          <span className={`text-xs px-2 py-0.5 rounded-full ${dataSource === 'supabase' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+            {dataSource === 'supabase' ? 'Supabase' : '\u30C7\u30E2'}
+          </span>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-slate-200">
@@ -100,11 +193,7 @@ export default function KnowledgePage() {
           {knowledgeCards.map((card) => {
             const Icon = card.icon;
             return (
-              <div
-                key={card.title}
-                onClick={() => setModalContent(card.category)}
-                className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-[#ea580c]/30 transition-all cursor-pointer group"
-              >
+              <div key={card.title} onClick={() => setModalContent(card.category)} className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 hover:shadow-md hover:border-[#ea580c]/30 transition-all cursor-pointer group">
                 <div className="w-10 h-10 rounded-lg bg-slate-100 group-hover:bg-[#ea580c]/10 flex items-center justify-center mb-3 transition-colors">
                   <Icon className="w-5 h-5 text-slate-500 group-hover:text-[#ea580c] transition-colors" />
                 </div>
@@ -119,7 +208,6 @@ export default function KnowledgePage() {
       {/* ========= OFFICE RULES TAB ========= */}
       {activeTab === 'rules' && (
         <div className="space-y-6">
-          {/* Custom accounts */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
             <h3 className="text-sm font-bold text-slate-700 mb-4">{'\u30AB\u30B9\u30BF\u30E0\u52D8\u5B9A\u79D1\u76EE'}</h3>
             <div className="overflow-x-auto">
@@ -132,13 +220,11 @@ export default function KnowledgePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {accounts.slice(0, 8).map((acc) => (
+                  {accountsDisplay.slice(0, 8).map((acc) => (
                     <tr key={acc.code} className="border-b border-slate-50">
                       <td className="py-2 px-2 text-slate-500 font-mono text-xs">{acc.code}</td>
                       <td className="py-2 px-2 text-slate-700 font-medium">{acc.name}</td>
-                      <td className="py-2 px-2">
-                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{acc.category}</span>
-                      </td>
+                      <td className="py-2 px-2"><span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{acc.category}</span></td>
                       <td className="py-2 px-2 text-xs text-slate-400">{acc.taxType}</td>
                       <td className="py-2 px-2 text-xs text-slate-400">{acc.description}</td>
                     </tr>
@@ -148,7 +234,6 @@ export default function KnowledgePage() {
             </div>
           </div>
 
-          {/* Journaling rules */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
             <h3 className="text-sm font-bold text-slate-700 mb-4">{'\u4ED5\u8A33\u30EB\u30FC\u30EB\u30A8\u30F3\u30B8\u30F3'}</h3>
             <div className="space-y-2">
@@ -157,22 +242,33 @@ export default function KnowledgePage() {
                   <div>
                     <p className="text-sm font-medium text-slate-700">{rule.title}</p>
                     {rule.condition && (
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        IF: {rule.condition} {'\u2192'} THEN: {rule.action}
-                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">IF: {rule.condition} {'\u2192'} THEN: {rule.action}</p>
                     )}
                   </div>
-                  {rule.enabled ? (
-                    <ToggleRight className="w-6 h-6 text-emerald-500" />
-                  ) : (
-                    <ToggleLeft className="w-6 h-6 text-slate-300" />
-                  )}
+                  {rule.enabled ? <ToggleRight className="w-6 h-6 text-emerald-500" /> : <ToggleLeft className="w-6 h-6 text-slate-300" />}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Fee table */}
+          {/* Task templates from DB */}
+          {taskTemplates.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+              <h3 className="text-sm font-bold text-slate-700 mb-4">{'\u696D\u52D9\u30C6\u30F3\u30D7\u30EC\u30FC\u30C8'}</h3>
+              <div className="space-y-2">
+                {taskTemplates.map((tmpl) => (
+                  <div key={tmpl.id} className="flex items-center gap-3 py-3 px-4 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded">{tmpl.category}</span>
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">{tmpl.title}</p>
+                      {tmpl.description && <p className="text-xs text-slate-400">{tmpl.description}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
             <h3 className="text-sm font-bold text-slate-700 mb-4">{'\u5831\u916C\u30C6\u30FC\u30D6\u30EB'}</h3>
             <table className="w-full text-sm">
@@ -187,7 +283,6 @@ export default function KnowledgePage() {
             </table>
           </div>
 
-          {/* Notification rules */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
             <h3 className="text-sm font-bold text-slate-700 mb-4">{'\u901A\u77E5\u30EB\u30FC\u30EB'}</h3>
             <div className="space-y-2">
@@ -200,11 +295,7 @@ export default function KnowledgePage() {
                       <p className="text-xs text-slate-400">{rule.description}</p>
                     </div>
                   </div>
-                  {rule.enabled ? (
-                    <ToggleRight className="w-6 h-6 text-emerald-500" />
-                  ) : (
-                    <ToggleLeft className="w-6 h-6 text-slate-300" />
-                  )}
+                  {rule.enabled ? <ToggleRight className="w-6 h-6 text-emerald-500" /> : <ToggleLeft className="w-6 h-6 text-slate-300" />}
                 </div>
               ))}
             </div>
@@ -233,10 +324,7 @@ export default function KnowledgePage() {
                 <span className="text-[11px] font-medium text-slate-600">{course.progress}%</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full ${course.progress === 100 ? 'bg-emerald-500' : 'bg-[#ea580c]'}`}
-                  style={{ width: `${course.progress}%` }}
-                />
+                <div className={`h-full rounded-full ${course.progress === 100 ? 'bg-emerald-500' : 'bg-[#ea580c]'}`} style={{ width: `${course.progress}%` }} />
               </div>
             </div>
           ))}
@@ -274,7 +362,7 @@ export default function KnowledgePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {accounts.map((acc) => (
+                    {accountsDisplay.map((acc) => (
                       <tr key={acc.code} className="border-b border-slate-50">
                         <td className="py-2 px-2 text-slate-500 font-mono text-xs">{acc.code}</td>
                         <td className="py-2 px-2 text-slate-700">{acc.name}</td>
@@ -301,7 +389,7 @@ export default function KnowledgePage() {
               )}
               {modalContent === 'rules' && (
                 <div className="space-y-2">
-                  {aiLearningRules.map((rule) => (
+                  {globalRulesDisplay.map((rule) => (
                     <div key={rule.id} className="flex items-center justify-between py-3 px-4 bg-slate-50 rounded-lg">
                       <div>
                         <p className="text-sm text-slate-700">{rule.clientName}: {rule.condition} {'\u2192'} {rule.account}</p>
@@ -309,9 +397,7 @@ export default function KnowledgePage() {
                       </div>
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
                         rule.status === '\u627F\u8A8D\u6E08' ? 'bg-emerald-100 text-emerald-700' : rule.status === '\u8981\u78BA\u8A8D' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {rule.status}
-                      </span>
+                      }`}>{rule.status}</span>
                     </div>
                   ))}
                 </div>

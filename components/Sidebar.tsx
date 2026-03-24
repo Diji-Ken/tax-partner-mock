@@ -12,7 +12,9 @@ import {
   Settings,
   ExternalLink,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -25,8 +27,21 @@ const navItems = [
 
 const portalItem = { href: '/portal', label: 'Portal', icon: ExternalLink };
 
+const labelMap: Record<string, string> = {
+  Home: '\u30DB\u30FC\u30E0',
+  Clients: '\u9867\u554F\u5148',
+  Tasks: '\u696D\u52D9\u30DC\u30FC\u30C9',
+  Revenue: '\u53CE\u76CA\u30FB\u30DE\u30C3\u30C1\u30F3\u30B0',
+  Knowledge: '\u30CA\u30EC\u30C3\u30B8',
+  Admin: '\u7BA1\u7406',
+};
+
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
+
+  const userName = user?.user_metadata?.name || '\u5C71\u7530 \u592A\u90CE';
+  const userInitials = userName.slice(0, 2);
 
   return (
     <aside className="fixed top-0 left-0 w-[240px] h-screen bg-[#1a2744] text-white flex flex-col z-50">
@@ -60,7 +75,7 @@ export const Sidebar: React.FC = () => {
               }`}
             >
               <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-              <span>{item.label === 'Home' ? '\u30DB\u30FC\u30E0' : item.label === 'Clients' ? '\u9867\u554F\u5148' : item.label === 'Tasks' ? '\u696D\u52D9\u30DC\u30FC\u30C9' : item.label === 'Revenue' ? '\u53CE\u76CA\u30FB\u30DE\u30C3\u30C1\u30F3\u30B0' : item.label === 'Knowledge' ? '\u30CA\u30EC\u30C3\u30B8' : item.label === 'Admin' ? '\u7BA1\u7406' : item.label}</span>
+              <span>{labelMap[item.label] || item.label}</span>
             </Link>
           );
         })}
@@ -92,12 +107,19 @@ export const Sidebar: React.FC = () => {
       <div className="px-4 py-4 border-t border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-[#ea580c]/80 flex items-center justify-center text-xs font-bold">
-            {'\u5C71\u7530'}
+            {userInitials}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-sm font-medium truncate">{'\u30B5\u30F3\u30D7\u30EB\u4F1A\u8A08\u4E8B\u52D9\u6240'}</div>
-            <div className="text-[11px] text-white/40 truncate">{'\u5C71\u7530 \u592A\u90CE / \u7BA1\u7406\u8005'}</div>
+            <div className="text-[11px] text-white/40 truncate">{userName} / {user?.user_metadata?.role === 'admin' ? '\u7BA1\u7406\u8005' : '\u30B9\u30BF\u30C3\u30D5'}</div>
           </div>
+          <button
+            onClick={() => signOut()}
+            className="p-1.5 rounded-lg text-white/30 hover:text-white/80 hover:bg-white/10 transition-colors"
+            title={'\u30ED\u30B0\u30A2\u30A6\u30C8'}
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </aside>
