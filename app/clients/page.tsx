@@ -27,6 +27,8 @@ import {
   FolderOpen,
   ExternalLink,
   Loader2,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { clients as demoClients, type Client } from '@/data/clients';
 import { tasks as demoTasks } from '@/data/tasks';
@@ -34,7 +36,21 @@ import { ocrResults } from '@/data/ocr-results';
 import { invoices as demoInvoices } from '@/data/invoices';
 import { aiLearningRules } from '@/data/ai-learning-rules';
 import { subsidies as demoSubsidies } from '@/data/subsidies';
-import { fetchClients, fetchTasks, insertClient } from '@/lib/supabase-helpers';
+import {
+  fetchClients,
+  fetchTasks,
+  insertClient,
+  updateClient,
+  deleteClient,
+  insertInvoice,
+  updateInvoiceStatus,
+  sendMessage,
+  insertClientNote,
+  insertJournalRule,
+  insertChecklistItem,
+  insertSubsidyNotification,
+  updateSubsidyNotificationStatus,
+} from '@/lib/supabase-helpers';
 import { supabase } from '@/lib/supabase';
 import type { Task } from '@/data/tasks';
 
@@ -173,7 +189,9 @@ export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<DetailTab>('overview');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [newClient, setNewClient] = useState(initialNewClient);
+  const [editClient, setEditClient] = useState(initialNewClient);
   const [saving, setSaving] = useState(false);
 
   // Detail panel DB state
@@ -189,6 +207,23 @@ export default function ClientsPage() {
   const [dbTaskTemplates, setDbTaskTemplates] = useState<DbTaskTemplate[]>([]);
   const [dbTaskChecklist, setDbTaskChecklist] = useState<DbTaskChecklist[]>([]);
   const [clientTasksFromDb, setClientTasksFromDb] = useState<Task[]>([]);
+
+  // CRUD UI state
+  const [messageInput, setMessageInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [noteInput, setNoteInput] = useState('');
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [showRuleModal, setShowRuleModal] = useState(false);
+  const [newRule, setNewRule] = useState({ conditionType: '', conditionValue: '', debitAccount: '', confidence: 70 });
+  const [showChecklistInput, setShowChecklistInput] = useState(false);
+  const [checklistInput, setChecklistInput] = useState('');
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [newInvoice, setNewInvoice] = useState({
+    periodStart: '',
+    periodEnd: '',
+    dueDate: '',
+    items: [{ description: '', quantity: 1, unitPrice: 0 }] as { description: string; quantity: number; unitPrice: number }[],
+  });
 
   useEffect(() => {
     async function loadData() {
@@ -286,6 +321,27 @@ export default function ClientsPage() {
     }
   }, [selectedClient, loadClientDetail]);
 
+  // Setup Supabase Realtime for messages
+  useEffect(() => {
+    if (!supabase || !selectedClient || dataSource !== 'supabase') return;
+
+    const channel = supabase
+      .channel('messages-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `client_id=eq.${selectedClient.id}` },
+        (payload) => {
+          const newMsg = payload.new as DbMessage;
+          setDbMessages((prev) => [...prev, newMsg]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase!.removeChannel(channel);
+    };
+  }, [selectedClient, dataSource]);
+
   const filtered = useMemo(() => {
     return clientsData.filter((c) => {
       if (search && !c.name.includes(search) && !c.representative.includes(search)) return false;
@@ -333,22 +389,22 @@ export default function ClientsPage() {
 
   // Resource checklist - from DB or demo
   const resourceChecklist = dataSource === 'supabase' && dbChecklist.length > 0
-    ? dbChecklist.map((c) => ({ label: c.label, collected: false }))
+    ? dbChecklist.map((c) => ({ id: c.id, label: c.label, collected: c.is_required }))
     : [
-        { label: '\u9818\u53CE\u66F8\u30FB\u30EC\u30B7\u30FC\u30C8', collected: true },
-        { label: '\u8ACB\u6C42\u66F8', collected: true },
-        { label: '\u9280\u884C\u901A\u5E33\u30B3\u30D4\u30FC', collected: false },
-        { label: '\u30AF\u30EC\u30B8\u30C3\u30C8\u30AB\u30FC\u30C9\u660E\u7D30', collected: false },
-        { label: '\u7D66\u4E0E\u53F0\u5E33', collected: true },
-        { label: '\u793E\u4F1A\u4FDD\u967A\u6599\u901A\u77E5', collected: true },
+        { id: 'd1', label: '\u9818\u53CE\u66F8\u30FB\u30EC\u30B7\u30FC\u30C8', collected: true },
+        { id: 'd2', label: '\u8ACB\u6C42\u66F8', collected: true },
+        { id: 'd3', label: '\u9280\u884C\u901A\u5E33\u30B3\u30D4\u30FC', collected: false },
+        { id: 'd4', label: '\u30AF\u30EC\u30B8\u30C3\u30C8\u30AB\u30FC\u30C9\u660E\u7D30', collected: false },
+        { id: 'd5', label: '\u7D66\u4E0E\u53F0\u5E33', collected: true },
+        { id: 'd6', label: '\u793E\u4F1A\u4FDD\u967A\u6599\u901A\u77E5', collected: true },
       ];
 
   // Processing notes - from DB or demo
   const processingNotes = dataSource === 'supabase' && dbNotes.length > 0
-    ? dbNotes.map((n) => n.content)
+    ? dbNotes.map((n) => ({ id: n.id, content: n.content }))
     : [
-        '\u5F79\u54E1\u5831\u916C\u306F\u6BCF\u6708\u5B9A\u984D500,000\u5186\u3002\u5909\u66F4\u6642\u306F\u5148\u65B9\u306B\u78BA\u8A8D\u8981\u3002',
-        '\u6C7A\u7B97\u8CDE\u4E0E\u306F12\u6708\u652F\u7D66\u3002\u640D\u91D1\u7B97\u5165\u6642\u671F\u306B\u6CE8\u610F\u3002',
+        { id: 'n1', content: '\u5F79\u54E1\u5831\u916C\u306F\u6BCF\u6708\u5B9A\u984D500,000\u5186\u3002\u5909\u66F4\u6642\u306F\u5148\u65B9\u306B\u78BA\u8A8D\u8981\u3002' },
+        { id: 'n2', content: '\u6C7A\u7B97\u8CDE\u4E0E\u306F12\u6708\u652F\u7D66\u3002\u640D\u91D1\u7B97\u5165\u6642\u671F\u306B\u6CE8\u610F\u3002' },
       ];
 
   // Journal rules - from DB or demo
@@ -408,6 +464,316 @@ export default function ClientsPage() {
       setSaving(false);
     }
   };
+
+  // Edit client handler
+  const handleEditClient = async () => {
+    if (!selectedClient) return;
+    setSaving(true);
+    try {
+      if (dataSource === 'supabase') {
+        const success = await updateClient(selectedClient.id, editClient);
+        if (success) {
+          const dbClients = await fetchClients();
+          if (dbClients.length > 0) {
+            setClientsData(dbClients);
+            // Update selectedClient with new data
+            const updated = dbClients.find((c) => c.id === selectedClient.id);
+            if (updated) setSelectedClient(updated);
+          }
+        } else {
+          alert('\u66F4\u65B0\u306B\u5931\u6557\u3057\u307E\u3057\u305F');
+        }
+      } else {
+        setClientsData((prev) =>
+          prev.map((c) =>
+            c.id === selectedClient.id
+              ? {
+                  ...c,
+                  name: editClient.name,
+                  representative: editClient.representative,
+                  type: editClient.type as Client['type'],
+                  settlementMonth: editClient.settlementMonth,
+                  accountingSoftware: editClient.accountingSoftware as Client['accountingSoftware'],
+                  monthlyFee: editClient.monthlyFee,
+                  phone: editClient.phone,
+                  email: editClient.email,
+                  industry: editClient.industry,
+                }
+              : c
+          )
+        );
+        const updated = clientsData.find((c) => c.id === selectedClient.id);
+        if (updated) {
+          setSelectedClient({
+            ...updated,
+            name: editClient.name,
+            representative: editClient.representative,
+            type: editClient.type as Client['type'],
+            settlementMonth: editClient.settlementMonth,
+            accountingSoftware: editClient.accountingSoftware as Client['accountingSoftware'],
+            monthlyFee: editClient.monthlyFee,
+            phone: editClient.phone,
+            email: editClient.email,
+            industry: editClient.industry,
+          });
+        }
+      }
+      setShowEditModal(false);
+    } catch (err) {
+      console.error('Failed to edit client:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete client handler
+  const handleDeleteClient = async () => {
+    if (!selectedClient) return;
+    if (!confirm(`\u300C${selectedClient.name}\u300D\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F\u3053\u306E\u64CD\u4F5C\u306F\u53D6\u308A\u6D88\u305B\u307E\u305B\u3093\u3002`)) return;
+
+    try {
+      if (dataSource === 'supabase') {
+        const success = await deleteClient(selectedClient.id);
+        if (success) {
+          const dbClients = await fetchClients();
+          setClientsData(dbClients.length > 0 ? dbClients : []);
+          setSelectedClient(null);
+        } else {
+          alert('\u524A\u9664\u306B\u5931\u6557\u3057\u307E\u3057\u305F');
+        }
+      } else {
+        setClientsData((prev) => prev.filter((c) => c.id !== selectedClient.id));
+        setSelectedClient(null);
+      }
+    } catch (err) {
+      console.error('Failed to delete client:', err);
+    }
+  };
+
+  // Open edit modal with current client data
+  const openEditModal = () => {
+    if (!selectedClient) return;
+    setEditClient({
+      name: selectedClient.name,
+      representative: selectedClient.representative,
+      type: selectedClient.type,
+      settlementMonth: selectedClient.settlementMonth,
+      accountingSoftware: selectedClient.accountingSoftware,
+      monthlyFee: selectedClient.monthlyFee,
+      phone: selectedClient.phone,
+      email: selectedClient.email,
+      industry: selectedClient.industry,
+    });
+    setShowEditModal(true);
+  };
+
+  // Send message handler
+  const handleSendMessage = async () => {
+    if (!selectedClient || !messageInput.trim()) return;
+    setSendingMessage(true);
+    try {
+      if (dataSource === 'supabase') {
+        const success = await sendMessage(selectedClient.id, messageInput.trim());
+        if (success) {
+          // Realtime will handle the update, but also fetch as fallback
+          if (supabase) {
+            const { data } = await supabase.from('messages').select('*').eq('client_id', selectedClient.id).order('created_at');
+            if (data) setDbMessages(data);
+          }
+        }
+      }
+      setMessageInput('');
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  // Add note handler
+  const handleAddNote = async () => {
+    if (!selectedClient || !noteInput.trim()) return;
+    try {
+      if (dataSource === 'supabase') {
+        const success = await insertClientNote(selectedClient.id, noteInput.trim());
+        if (success && supabase) {
+          const { data } = await supabase.from('client_notes').select('*').eq('client_id', selectedClient.id).order('created_at', { ascending: false });
+          if (data) setDbNotes(data);
+        }
+      }
+      setNoteInput('');
+      setShowNoteInput(false);
+    } catch (err) {
+      console.error('Failed to add note:', err);
+    }
+  };
+
+  // Add journal rule handler
+  const handleAddRule = async () => {
+    if (!selectedClient || !newRule.conditionType || !newRule.conditionValue || !newRule.debitAccount) return;
+    try {
+      if (dataSource === 'supabase') {
+        const success = await insertJournalRule({
+          clientId: selectedClient.id,
+          conditionType: newRule.conditionType,
+          conditionValue: newRule.conditionValue,
+          debitAccount: newRule.debitAccount,
+          confidence: newRule.confidence,
+        });
+        if (success && supabase) {
+          const { data } = await supabase.from('ai_journal_rules').select('*').eq('client_id', selectedClient.id).order('created_at');
+          if (data) setDbJournalRules(data);
+        }
+      }
+      setNewRule({ conditionType: '', conditionValue: '', debitAccount: '', confidence: 70 });
+      setShowRuleModal(false);
+    } catch (err) {
+      console.error('Failed to add rule:', err);
+    }
+  };
+
+  // Add checklist item handler
+  const handleAddChecklistItem = async () => {
+    if (!selectedClient || !checklistInput.trim()) return;
+    try {
+      if (dataSource === 'supabase') {
+        const success = await insertChecklistItem(selectedClient.id, checklistInput.trim());
+        if (success && supabase) {
+          const { data } = await supabase.from('client_document_checklist').select('*').eq('client_id', selectedClient.id).order('sort_order');
+          if (data) setDbChecklist(data);
+        }
+      }
+      setChecklistInput('');
+      setShowChecklistInput(false);
+    } catch (err) {
+      console.error('Failed to add checklist item:', err);
+    }
+  };
+
+  // Invoice handlers
+  const invoiceTotal = useMemo(() => {
+    const amount = newInvoice.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const tax = Math.floor(amount * 0.1);
+    return { amount, tax, total: amount + tax };
+  }, [newInvoice.items]);
+
+  const handleCreateInvoice = async () => {
+    if (!selectedClient || newInvoice.items.every((i) => !i.description)) return;
+    setSaving(true);
+    try {
+      if (dataSource === 'supabase') {
+        const success = await insertInvoice({
+          clientId: selectedClient.id,
+          periodStart: newInvoice.periodStart,
+          periodEnd: newInvoice.periodEnd,
+          dueDate: newInvoice.dueDate,
+          items: newInvoice.items.filter((i) => i.description),
+        });
+        if (success && supabase) {
+          const { data } = await supabase.from('invoices').select('*').eq('client_id', selectedClient.id).order('created_at', { ascending: false });
+          if (data) setDbInvoices(data);
+        }
+      }
+      setNewInvoice({ periodStart: '', periodEnd: '', dueDate: '', items: [{ description: '', quantity: 1, unitPrice: 0 }] });
+      setShowInvoiceModal(false);
+    } catch (err) {
+      console.error('Failed to create invoice:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleInvoiceStatusChange = async (invoiceId: string, newStatus: string) => {
+    if (dataSource === 'supabase') {
+      // Optimistic update
+      setDbInvoices((prev) => prev.map((inv) => inv.id === invoiceId ? { ...inv, status: newStatus === '\u4E0B\u66F8\u304D' ? 'draft' : newStatus === '\u9001\u4ED8\u6E08' ? 'sent' : newStatus === '\u5165\u91D1\u6E08' ? 'paid' : 'overdue' } : inv));
+      const success = await updateInvoiceStatus(invoiceId, newStatus);
+      if (!success && supabase && selectedClient) {
+        const { data } = await supabase.from('invoices').select('*').eq('client_id', selectedClient.id).order('created_at', { ascending: false });
+        if (data) setDbInvoices(data);
+        alert('\u66F4\u65B0\u306B\u5931\u6557\u3057\u307E\u3057\u305F');
+      }
+    }
+  };
+
+  // Subsidy notification handler
+  const handleNotifySubsidy = async (subsidyName: string, subsidySource: string) => {
+    if (!selectedClient) return;
+    try {
+      if (dataSource === 'supabase') {
+        const success = await insertSubsidyNotification(selectedClient.id, subsidyName, subsidySource);
+        if (success && supabase) {
+          const { data } = await supabase.from('subsidy_notifications').select('*').eq('client_id', selectedClient.id).order('created_at', { ascending: false });
+          if (data) setDbSubsidyNotifications(data);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send subsidy notification:', err);
+    }
+  };
+
+  const handleSubsidyStatusChange = async (notificationId: string, newStatus: string) => {
+    if (dataSource === 'supabase') {
+      setDbSubsidyNotifications((prev) => prev.map((n) => n.id === notificationId ? { ...n, status: newStatus } : n));
+      const success = await updateSubsidyNotificationStatus(notificationId, newStatus);
+      if (!success && supabase && selectedClient) {
+        const { data } = await supabase.from('subsidy_notifications').select('*').eq('client_id', selectedClient.id).order('created_at', { ascending: false });
+        if (data) setDbSubsidyNotifications(data);
+        alert('\u66F4\u65B0\u306B\u5931\u6557\u3057\u307E\u3057\u305F');
+      }
+    }
+  };
+
+  // Client form modal (shared between add/edit)
+  const renderClientFormFields = (formData: typeof initialNewClient, setFormData: (data: typeof initialNewClient) => void) => (
+    <div className="p-6 space-y-4">
+      <div>
+        <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4F1A\u793E\u540D'} *</label>
+        <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" placeholder={'\u682A\u5F0F\u4F1A\u793E\u25CB\u25CB'} />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4EE3\u8868\u8005\u540D'}</label>
+          <input type="text" value={formData.representative} onChange={(e) => setFormData({ ...formData, representative: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">{'\u696D\u7A2E'}</label>
+          <input type="text" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">{'\u6C7A\u7B97\u6708'}</label>
+          <select value={formData.settlementMonth} onChange={(e) => setFormData({ ...formData, settlementMonth: Number(e.target.value) })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30">
+            {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (<option key={m} value={m}>{m}{'\u6708'}</option>))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4F1A\u8A08\u30BD\u30D5\u30C8'}</label>
+          <select value={formData.accountingSoftware} onChange={(e) => setFormData({ ...formData, accountingSoftware: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30">
+            <option value="freee">freee</option>
+            <option value="MF">MF</option>
+            <option value="yayoi">{'\u5F25\u751F'}</option>
+            <option value="other">{'\u305D\u306E\u4ED6'}</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">{'\u6708\u984D\u9867\u554F\u6599'}</label>
+          <input type="number" value={formData.monthlyFee} onChange={(e) => setFormData({ ...formData, monthlyFee: Number(e.target.value) })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">{'\u96FB\u8A71\u756A\u53F7'}</label>
+          <input type="text" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">{'\u30E1\u30FC\u30EB'}</label>
+          <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
@@ -534,59 +900,173 @@ export default function ClientsPage() {
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4F1A\u793E\u540D'} *</label>
-                <input type="text" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" placeholder={'\u682A\u5F0F\u4F1A\u793E\u25CB\u25CB'} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4EE3\u8868\u8005\u540D'}</label>
-                  <input type="text" value={newClient.representative} onChange={(e) => setNewClient({ ...newClient, representative: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u696D\u7A2E'}</label>
-                  <input type="text" value={newClient.industry} onChange={(e) => setNewClient({ ...newClient, industry: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u6C7A\u7B97\u6708'}</label>
-                  <select value={newClient.settlementMonth} onChange={(e) => setNewClient({ ...newClient, settlementMonth: Number(e.target.value) })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30">
-                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (<option key={m} value={m}>{m}{'\u6708'}</option>))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u4F1A\u8A08\u30BD\u30D5\u30C8'}</label>
-                  <select value={newClient.accountingSoftware} onChange={(e) => setNewClient({ ...newClient, accountingSoftware: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30">
-                    <option value="freee">freee</option>
-                    <option value="MF">MF</option>
-                    <option value="yayoi">{'\u5F25\u751F'}</option>
-                    <option value="other">{'\u305D\u306E\u4ED6'}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u6708\u984D\u9867\u554F\u6599'}</label>
-                  <input type="number" value={newClient.monthlyFee} onChange={(e) => setNewClient({ ...newClient, monthlyFee: Number(e.target.value) })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u96FB\u8A71\u756A\u53F7'}</label>
-                  <input type="text" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u30E1\u30FC\u30EB'}</label>
-                  <input type="email" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
-                </div>
-              </div>
-            </div>
+            {renderClientFormFields(newClient, setNewClient)}
             <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3">
               <button onClick={() => setShowAddModal(false)} className="text-sm text-slate-500 border border-slate-200 rounded-lg px-4 py-2 hover:bg-slate-50">{'\u30AD\u30E3\u30F3\u30BB\u30EB'}</button>
               <button onClick={handleAddClient} disabled={!newClient.name || saving} className="flex items-center gap-2 bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
                 {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {saving ? '\u4FDD\u5B58\u4E2D...' : '\u767B\u9332'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========= EDIT CLIENT MODAL ========= */}
+      {showEditModal && selectedClient && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowEditModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[560px] max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-800">{'\u9867\u554F\u5148\u7DE8\u96C6'}</h2>
+              <button onClick={() => setShowEditModal(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            {renderClientFormFields(editClient, setEditClient)}
+            <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button onClick={() => setShowEditModal(false)} className="text-sm text-slate-500 border border-slate-200 rounded-lg px-4 py-2 hover:bg-slate-50">{'\u30AD\u30E3\u30F3\u30BB\u30EB'}</button>
+              <button onClick={handleEditClient} disabled={!editClient.name || saving} className="flex items-center gap-2 bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {saving ? '\u4FDD\u5B58\u4E2D...' : '\u4FDD\u5B58'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========= INVOICE MODAL ========= */}
+      {showInvoiceModal && selectedClient && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowInvoiceModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[640px] max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-800">{'\u65B0\u898F\u8ACB\u6C42\u66F8\u4F5C\u6210'}</h2>
+              <button onClick={() => setShowInvoiceModal(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-slate-600">{'\u9867\u554F\u5148'}: <span className="font-medium">{selectedClient.name}</span></p>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u5BFE\u8C61\u671F\u9593\uFF08\u958B\u59CB\uFF09'}</label>
+                  <input type="date" value={newInvoice.periodStart} onChange={(e) => setNewInvoice({ ...newInvoice, periodStart: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u5BFE\u8C61\u671F\u9593\uFF08\u7D42\u4E86\uFF09'}</label>
+                  <input type="date" value={newInvoice.periodEnd} onChange={(e) => setNewInvoice({ ...newInvoice, periodEnd: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{'\u652F\u6255\u671F\u9650'}</label>
+                  <input type="date" value={newInvoice.dueDate} onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-slate-500">{'\u660E\u7D30'}</label>
+                  <button
+                    onClick={() => setNewInvoice({ ...newInvoice, items: [...newInvoice.items, { description: '', quantity: 1, unitPrice: 0 }] })}
+                    className="text-xs text-[#ea580c] hover:underline"
+                  >
+                    + {'\u884C\u3092\u8FFD\u52A0'}
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {newInvoice.items.map((item, idx) => (
+                    <div key={idx} className="grid grid-cols-[1fr_80px_120px_30px] gap-2 items-center">
+                      <input
+                        type="text"
+                        placeholder={'\u54C1\u76EE'}
+                        value={item.description}
+                        onChange={(e) => {
+                          const items = [...newInvoice.items];
+                          items[idx] = { ...items[idx], description: e.target.value };
+                          setNewInvoice({ ...newInvoice, items });
+                        }}
+                        className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                      />
+                      <input
+                        type="number"
+                        placeholder={'\u6570\u91CF'}
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const items = [...newInvoice.items];
+                          items[idx] = { ...items[idx], quantity: Number(e.target.value) };
+                          setNewInvoice({ ...newInvoice, items });
+                        }}
+                        className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                      />
+                      <input
+                        type="number"
+                        placeholder={'\u5358\u4FA1'}
+                        value={item.unitPrice || ''}
+                        onChange={(e) => {
+                          const items = [...newInvoice.items];
+                          items[idx] = { ...items[idx], unitPrice: Number(e.target.value) };
+                          setNewInvoice({ ...newInvoice, items });
+                        }}
+                        className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                      />
+                      {newInvoice.items.length > 1 && (
+                        <button
+                          onClick={() => setNewInvoice({ ...newInvoice, items: newInvoice.items.filter((_, i) => i !== idx) })}
+                          className="text-red-400 hover:text-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4 space-y-1 text-sm">
+                <div className="flex justify-between"><span className="text-slate-500">{'\u5C0F\u8A08'}</span><span className="text-slate-700">{'\u00A5'}{invoiceTotal.amount.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-slate-500">{'\u6D88\u8CBB\u7A0E\uFF0810%\uFF09'}</span><span className="text-slate-700">{'\u00A5'}{invoiceTotal.tax.toLocaleString()}</span></div>
+                <div className="flex justify-between font-bold border-t border-slate-200 pt-1"><span className="text-slate-700">{'\u5408\u8A08'}</span><span className="text-[#ea580c]">{'\u00A5'}{invoiceTotal.total.toLocaleString()}</span></div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button onClick={() => setShowInvoiceModal(false)} className="text-sm text-slate-500 border border-slate-200 rounded-lg px-4 py-2 hover:bg-slate-50">{'\u30AD\u30E3\u30F3\u30BB\u30EB'}</button>
+              <button onClick={handleCreateInvoice} disabled={saving} className="flex items-center gap-2 bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {saving ? '\u4F5C\u6210\u4E2D...' : '\u8ACB\u6C42\u66F8\u3092\u4F5C\u6210'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========= JOURNAL RULE MODAL ========= */}
+      {showRuleModal && selectedClient && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowRuleModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-[480px]">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-800">{'\u4ED5\u8A33\u30EB\u30FC\u30EB\u8FFD\u52A0'}</h2>
+              <button onClick={() => setShowRuleModal(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5 text-slate-400" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-slate-500 block mb-1">{'\u6761\u4EF6\u30BF\u30A4\u30D7'}</label>
+                <input type="text" value={newRule.conditionType} onChange={(e) => setNewRule({ ...newRule, conditionType: e.target.value })} placeholder={'\u4F8B: \u6458\u8981\u542B\u3080'} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-500 block mb-1">{'\u6761\u4EF6\u5024'}</label>
+                <input type="text" value={newRule.conditionValue} onChange={(e) => setNewRule({ ...newRule, conditionValue: e.target.value })} placeholder={'\u4F8B: AWS, GitHub'} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-500 block mb-1">{'\u52D8\u5B9A\u79D1\u76EE'}</label>
+                <input type="text" value={newRule.debitAccount} onChange={(e) => setNewRule({ ...newRule, debitAccount: e.target.value })} placeholder={'\u4F8B: \u901A\u4FE1\u8CBB'} className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-500 block mb-1">{'\u78BA\u4FE1\u5EA6'} ({newRule.confidence}%)</label>
+                <input type="range" min={10} max={100} value={newRule.confidence} onChange={(e) => setNewRule({ ...newRule, confidence: Number(e.target.value) })} className="w-full" />
+              </div>
+            </div>
+            <div className="p-6 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button onClick={() => setShowRuleModal(false)} className="text-sm text-slate-500 border border-slate-200 rounded-lg px-4 py-2 hover:bg-slate-50">{'\u30AD\u30E3\u30F3\u30BB\u30EB'}</button>
+              <button onClick={handleAddRule} disabled={!newRule.conditionType || !newRule.debitAccount} className="bg-[#ea580c] hover:bg-[#c2410c] disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">{'\u8FFD\u52A0'}</button>
             </div>
           </div>
         </div>
@@ -656,6 +1136,24 @@ export default function ClientsPage() {
               {/* ========= OVERVIEW TAB ========= */}
               {activeTab === 'overview' && (
                 <div className="space-y-6">
+                  {/* Edit / Delete buttons */}
+                  <div className="flex items-center gap-2 justify-end">
+                    <button
+                      onClick={openEditModal}
+                      className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      {'\u7DE8\u96C6'}
+                    </button>
+                    <button
+                      onClick={handleDeleteClient}
+                      className="flex items-center gap-1.5 text-xs text-red-600 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      {'\u524A\u9664'}
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <h3 className="text-sm font-bold text-slate-700 mb-3">{'\u57FA\u672C\u60C5\u5831'}</h3>
@@ -865,7 +1363,6 @@ export default function ClientsPage() {
                       <button className="mt-2 text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">+ {'\u66F8\u985E\u3092\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9'}</button>
                     </div>
                   ) : (
-                    /* Demo data fallback */
                     <>
                       <div className="space-y-2">
                         {[{ name: '2025\u5E74\u5EA6', items: ['\u9818\u53CE\u66F8', '\u8ACB\u6C42\u66F8', '\u9280\u884C\u660E\u7D30', '\u30AF\u30EC\u30AB\u660E\u7D30', '\u6C7A\u7B97\u66F8\u985E'] }, { name: '2026\u5E74\u5EA6', items: ['\u9818\u53CE\u66F8', '\u8ACB\u6C42\u66F8', '\u9280\u884C\u660E\u7D30', '\u30AF\u30EC\u30AB\u660E\u7D30'] }].map((folder) => (
@@ -908,7 +1405,12 @@ export default function ClientsPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-slate-700">{'\u8ACB\u6C42\u66F8\u4E00\u89A7'}</h3>
-                    <button className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">{'\u65B0\u898F\u8ACB\u6C42\u66F8\u4F5C\u6210'}</button>
+                    <button
+                      onClick={() => setShowInvoiceModal(true)}
+                      className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors"
+                    >
+                      {'\u65B0\u898F\u8ACB\u6C42\u66F8\u4F5C\u6210'}
+                    </button>
                   </div>
                   {dataSource === 'supabase' && dbInvoices.length > 0 ? (
                     <div className="space-y-2">
@@ -916,12 +1418,20 @@ export default function ClientsPage() {
                         const statusLabel = inv.status === 'paid' ? '\u5165\u91D1\u6E08' : inv.status === 'sent' ? '\u9001\u4ED8\u6E08' : inv.status === 'overdue' ? '\u672A\u5165\u91D1' : '\u4E0B\u66F8\u304D';
                         const statusColor = inv.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : inv.status === 'sent' ? 'bg-blue-100 text-blue-700' : inv.status === 'overdue' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600';
                         return (
-                          <div key={inv.id} className="flex items-center gap-4 py-3 px-4 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer">
+                          <div key={inv.id} className="flex items-center gap-4 py-3 px-4 bg-slate-50 rounded-lg hover:bg-slate-100">
                             <Receipt className="w-4 h-4 text-slate-400" />
                             <span className="text-sm font-medium text-slate-700">{inv.invoice_number || '-'}</span>
                             <span className="flex-1 text-sm text-slate-500">{'\u00A5'}{(inv.total_amount || inv.amount).toLocaleString()}</span>
                             <span className="text-xs text-slate-400">{inv.created_at?.slice(0, 10)}</span>
-                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${statusColor}`}>{statusLabel}</span>
+                            <select
+                              value={statusLabel}
+                              onChange={(e) => handleInvoiceStatusChange(inv.id, e.target.value)}
+                              className={`text-[10px] font-medium px-2 py-0.5 rounded border-0 cursor-pointer ${statusColor}`}
+                            >
+                              {['\u4E0B\u66F8\u304D', '\u9001\u4ED8\u6E08', '\u5165\u91D1\u6E08', '\u672A\u5165\u91D1'].map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
                           </div>
                         );
                       })}
@@ -930,7 +1440,7 @@ export default function ClientsPage() {
                     <div className="text-center py-12 text-slate-400">
                       <Receipt className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">{'\u307E\u3060\u8ACB\u6C42\u66F8\u304C\u3042\u308A\u307E\u305B\u3093'}</p>
-                      <button className="mt-2 text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">+ {'\u8ACB\u6C42\u66F8\u3092\u4F5C\u6210'}</button>
+                      <button onClick={() => setShowInvoiceModal(true)} className="mt-2 text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">+ {'\u8ACB\u6C42\u66F8\u3092\u4F5C\u6210'}</button>
                     </div>
                   ) : clientInvoicesDemo.length > 0 ? (
                     <div className="space-y-2">
@@ -954,7 +1464,15 @@ export default function ClientsPage() {
               {activeTab === 'knowledge' && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-700 mb-3">{'\u4ED5\u8A33\u30EB\u30FC\u30EB'}</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-slate-700">{'\u4ED5\u8A33\u30EB\u30FC\u30EB'}</h3>
+                      <button
+                        onClick={() => setShowRuleModal(true)}
+                        className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors"
+                      >
+                        + {'\u30EB\u30FC\u30EB\u3092\u8FFD\u52A0'}
+                      </button>
+                    </div>
                     {journalRules.length > 0 ? (
                       <div className="space-y-2">
                         {journalRules.map((rule) => (
@@ -971,40 +1489,81 @@ export default function ClientsPage() {
                       <div className="text-center py-8 text-slate-400">
                         <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">{'\u30EB\u30FC\u30EB\u304C\u767B\u9332\u3055\u308C\u3066\u3044\u307E\u305B\u3093'}</p>
-                        <button className="mt-2 text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">+ {'\u30EB\u30FC\u30EB\u3092\u8FFD\u52A0'}</button>
                       </div>
                     )}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-700 mb-3">{'\u51E6\u7406\u30E1\u30E2\u30FB\u6CE8\u610F\u4E8B\u9805'}</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-slate-700">{'\u51E6\u7406\u30E1\u30E2\u30FB\u6CE8\u610F\u4E8B\u9805'}</h3>
+                      <button
+                        onClick={() => setShowNoteInput(true)}
+                        className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors"
+                      >
+                        + {'\u30E1\u30E2\u3092\u8FFD\u52A0'}
+                      </button>
+                    </div>
+                    {showNoteInput && (
+                      <div className="mb-3 flex gap-2">
+                        <input
+                          type="text"
+                          value={noteInput}
+                          onChange={(e) => setNoteInput(e.target.value)}
+                          placeholder={'\u51E6\u7406\u30E1\u30E2\u3092\u5165\u529B...'}
+                          className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleAddNote(); }}
+                        />
+                        <button onClick={handleAddNote} className="bg-[#ea580c] text-white text-sm px-3 py-2 rounded-lg hover:bg-[#c2410c]">{'\u8FFD\u52A0'}</button>
+                        <button onClick={() => { setShowNoteInput(false); setNoteInput(''); }} className="text-slate-400 text-sm px-2">{'\u00D7'}</button>
+                      </div>
+                    )}
                     {processingNotes.length > 0 ? (
                       <div className="space-y-2">
-                        {processingNotes.map((note, i) => (
-                          <div key={i} className="py-2.5 px-3 bg-amber-50 border-l-3 border-amber-400 rounded-r-lg text-sm text-slate-700">{note}</div>
+                        {processingNotes.map((note) => (
+                          <div key={note.id} className="py-2.5 px-3 bg-amber-50 border-l-3 border-amber-400 rounded-r-lg text-sm text-slate-700">{note.content}</div>
                         ))}
                       </div>
-                    ) : (
+                    ) : !showNoteInput && (
                       <div className="text-center py-6 text-slate-400">
                         <p className="text-sm">{'\u30E1\u30E2\u306F\u307E\u3060\u3042\u308A\u307E\u305B\u3093'}</p>
-                        <button className="mt-2 text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">+ {'\u30E1\u30E2\u3092\u8FFD\u52A0'}</button>
                       </div>
                     )}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-700 mb-3">{'\u8CC7\u6599\u56DE\u53CE\u30C1\u30A7\u30C3\u30AF\u30EA\u30B9\u30C8'}</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-slate-700">{'\u8CC7\u6599\u56DE\u53CE\u30C1\u30A7\u30C3\u30AF\u30EA\u30B9\u30C8'}</h3>
+                      <button
+                        onClick={() => setShowChecklistInput(true)}
+                        className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors"
+                      >
+                        + {'\u9805\u76EE\u3092\u8FFD\u52A0'}
+                      </button>
+                    </div>
+                    {showChecklistInput && (
+                      <div className="mb-3 flex gap-2">
+                        <input
+                          type="text"
+                          value={checklistInput}
+                          onChange={(e) => setChecklistInput(e.target.value)}
+                          placeholder={'\u65B0\u3057\u3044\u30C1\u30A7\u30C3\u30AF\u9805\u76EE...'}
+                          className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleAddChecklistItem(); }}
+                        />
+                        <button onClick={handleAddChecklistItem} className="bg-[#ea580c] text-white text-sm px-3 py-2 rounded-lg hover:bg-[#c2410c]">{'\u8FFD\u52A0'}</button>
+                        <button onClick={() => { setShowChecklistInput(false); setChecklistInput(''); }} className="text-slate-400 text-sm px-2">{'\u00D7'}</button>
+                      </div>
+                    )}
                     {resourceChecklist.length > 0 ? (
                       <div className="space-y-1.5">
-                        {resourceChecklist.map((item, i) => (
-                          <div key={i} className="flex items-center gap-3 py-2 px-3 bg-slate-50 rounded-lg">
+                        {resourceChecklist.map((item) => (
+                          <div key={item.id} className="flex items-center gap-3 py-2 px-3 bg-slate-50 rounded-lg">
                             {item.collected ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Circle className="w-4 h-4 text-slate-300" />}
                             <span className={`text-sm ${item.collected ? 'text-slate-500' : 'text-slate-700 font-medium'}`}>{item.label}</span>
                           </div>
                         ))}
                       </div>
-                    ) : (
+                    ) : !showChecklistInput && (
                       <div className="text-center py-6 text-slate-400">
                         <p className="text-sm">{'\u30C1\u30A7\u30C3\u30AF\u30EA\u30B9\u30C8\u306F\u307E\u3060\u3042\u308A\u307E\u305B\u3093'}</p>
-                        <button className="mt-2 text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">+ {'\u9805\u76EE\u3092\u8FFD\u52A0'}</button>
                       </div>
                     )}
                   </div>
@@ -1021,7 +1580,7 @@ export default function ClientsPage() {
               {/* ========= SUBSIDY TAB ========= */}
               {activeTab === 'subsidy' && (
                 <div className="space-y-6">
-                  {dataSource === 'supabase' && dbSubsidyNotifications.length > 0 ? (
+                  {dataSource === 'supabase' && dbSubsidyNotifications.length > 0 && (
                     <>
                       <h3 className="text-sm font-bold text-slate-700">{'\u88DC\u52A9\u91D1\u6848\u5185\u5C65\u6B74'}</h3>
                       <div className="space-y-3">
@@ -1030,55 +1589,66 @@ export default function ClientsPage() {
                             <div className="flex items-start justify-between">
                               <div>
                                 <p className="text-sm font-bold text-slate-700">{n.subsidy_name}</p>
-                                <p className="text-xs text-slate-400 mt-1">{'\u30B9\u30C6\u30FC\u30BF\u30B9'}: {n.status} | {'\u6848\u5185\u65E5'}: {n.notified_at?.slice(0, 10) || n.created_at?.slice(0, 10)}</p>
+                                <p className="text-xs text-slate-400 mt-1">{'\u6848\u5185\u65E5'}: {n.notified_at?.slice(0, 10) || n.created_at?.slice(0, 10)}</p>
                                 {n.amount && <p className="text-xs text-slate-500 mt-0.5">{'\u91D1\u984D'}: {'\u00A5'}{n.amount.toLocaleString()}</p>}
                               </div>
+                              <select
+                                value={n.status}
+                                onChange={(e) => handleSubsidyStatusChange(n.id, e.target.value)}
+                                className="text-[10px] font-medium px-2 py-1 rounded border border-slate-200 bg-white cursor-pointer"
+                              >
+                                {['\u6848\u5185\u6E08', '\u8208\u5473\u3042\u308A', '\u7533\u8ACB\u4E2D', '\u63A1\u629E', '\u4E0D\u63A1\u629E'].map((s) => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
                             </div>
                           </div>
                         ))}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="text-sm font-bold text-slate-700">{'\u8A72\u5F53\u88DC\u52A9\u91D1\uFF08AI\u30DE\u30C3\u30C1\u30F3\u30B0\uFF09'}</h3>
-                      <div className="space-y-3">
-                        {demoSubsidies.filter(s => s.status === '\u52DF\u96C6\u4E2D').slice(0, 3).map((sub) => (
-                          <div key={sub.id} className="border border-slate-200 rounded-lg p-4 hover:border-[#ea580c] transition-colors">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <p className="text-sm font-bold text-slate-700">{sub.name}</p>
-                                  <span className="text-[10px] bg-[#ea580c]/10 text-[#ea580c] font-medium px-2 py-0.5 rounded">{'\u30DE\u30C3\u30C1\u5EA6 85%'}</span>
-                                </div>
-                                <p className="text-xs text-slate-500 mb-2">{sub.description}</p>
-                                <p className="text-xs text-slate-400">{'\u4E0A\u9650'}: {sub.maxAmount} | {'\u7DE0\u5207'}: {sub.deadline}</p>
-                              </div>
-                              <button className="text-xs text-white bg-[#ea580c] rounded px-3 py-1.5 hover:bg-[#c2410c] transition-colors whitespace-nowrap">{'\u6848\u5185\u3059\u308B'}</button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-700 mb-3">{'\u7D39\u4ECB\u6E08\u307F\u30B5\u30FC\u30D3\u30B9'}</h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between py-2.5 px-3 bg-slate-50 rounded-lg">
-                            <div>
-                              <p className="text-sm text-slate-700">{'\u793E\u4F1A\u4FDD\u967A\u52B4\u52D9\u58EB\u6CD5\u4EBA\u307F\u3089\u3044'}</p>
-                              <p className="text-xs text-slate-400">{'\u52A9\u6210\u91D1\u7533\u8ACB\u30B5\u30DD\u30FC\u30C8'}</p>
-                            </div>
-                            <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">{'\u6210\u7D04'}</span>
-                          </div>
-                          <div className="flex items-center justify-between py-2.5 px-3 bg-slate-50 rounded-lg">
-                            <div>
-                              <p className="text-sm text-slate-700">{'\u30C7\u30B8\u30BF\u30EB\u30C4\u30FC\u30EB\u7814\u7A76\u6240'}</p>
-                              <p className="text-xs text-slate-400">{'IT\u5C0E\u5165\u88DC\u52A9\u91D1\u652F\u63F4'}</p>
-                            </div>
-                            <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{'\u9032\u884C\u4E2D'}</span>
-                          </div>
-                        </div>
                       </div>
                     </>
                   )}
+                  <h3 className="text-sm font-bold text-slate-700">{'\u8A72\u5F53\u88DC\u52A9\u91D1\uFF08AI\u30DE\u30C3\u30C1\u30F3\u30B0\uFF09'}</h3>
+                  <div className="space-y-3">
+                    {demoSubsidies.filter(s => s.status === '\u52DF\u96C6\u4E2D').slice(0, 3).map((sub) => (
+                      <div key={sub.id} className="border border-slate-200 rounded-lg p-4 hover:border-[#ea580c] transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-bold text-slate-700">{sub.name}</p>
+                              <span className="text-[10px] bg-[#ea580c]/10 text-[#ea580c] font-medium px-2 py-0.5 rounded">{'\u30DE\u30C3\u30C1\u5EA6 85%'}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 mb-2">{sub.description}</p>
+                            <p className="text-xs text-slate-400">{'\u4E0A\u9650'}: {sub.maxAmount} | {'\u7DE0\u5207'}: {sub.deadline}</p>
+                          </div>
+                          <button
+                            onClick={() => handleNotifySubsidy(sub.name, sub.source)}
+                            className="text-xs text-white bg-[#ea580c] rounded px-3 py-1.5 hover:bg-[#c2410c] transition-colors whitespace-nowrap"
+                          >
+                            {'\u6848\u5185\u3059\u308B'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-700 mb-3">{'\u7D39\u4ECB\u6E08\u307F\u30B5\u30FC\u30D3\u30B9'}</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between py-2.5 px-3 bg-slate-50 rounded-lg">
+                        <div>
+                          <p className="text-sm text-slate-700">{'\u793E\u4F1A\u4FDD\u967A\u52B4\u52D9\u58EB\u6CD5\u4EBA\u307F\u3089\u3044'}</p>
+                          <p className="text-xs text-slate-400">{'\u52A9\u6210\u91D1\u7533\u8ACB\u30B5\u30DD\u30FC\u30C8'}</p>
+                        </div>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">{'\u6210\u7D04'}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-2.5 px-3 bg-slate-50 rounded-lg">
+                        <div>
+                          <p className="text-sm text-slate-700">{'\u30C7\u30B8\u30BF\u30EB\u30C4\u30FC\u30EB\u7814\u7A76\u6240'}</p>
+                          <p className="text-xs text-slate-400">{'IT\u5C0E\u5165\u88DC\u52A9\u91D1\u652F\u63F4'}</p>
+                        </div>
+                        <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{'\u9032\u884C\u4E2D'}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1120,9 +1690,20 @@ export default function ClientsPage() {
                     </div>
                   )}
                   <div className="flex gap-2">
-                    <input type="text" placeholder={'\u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u5165\u529B...'} className="flex-1 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30" />
-                    <button className="bg-[#ea580c] text-white rounded-lg px-4 py-2.5 hover:bg-[#c2410c] transition-colors">
-                      <Send className="w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder={'\u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u5165\u529B...'}
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
+                      className="flex-1 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={sendingMessage || !messageInput.trim()}
+                      className="bg-[#ea580c] text-white rounded-lg px-4 py-2.5 hover:bg-[#c2410c] transition-colors disabled:opacity-50"
+                    >
+                      {sendingMessage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </button>
                   </div>
                   <div>
