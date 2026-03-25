@@ -218,6 +218,22 @@ export default function ClientsPage() {
   const [showChecklistInput, setShowChecklistInput] = useState(false);
   const [checklistInput, setChecklistInput] = useState('');
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
+  // Voucher upload state
+  const [uploadDragOver, setUploadDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadVoucherType, setUploadVoucherType] = useState('receipt');
+  interface VoucherFile {
+    id: string;
+    file_name: string;
+    voucher_type: string;
+    fiscal_year: number | null;
+    uploaded_at: string | null;
+    storage_provider: string | null;
+    storage_path: string | null;
+  }
+  const [dbVouchers, setDbVouchers] = useState<VoucherFile[]>([]);
   const [newInvoice, setNewInvoice] = useState({
     periodStart: '',
     periodEnd: '',
@@ -283,6 +299,10 @@ export default function ClientsPage() {
       setDbSubsidyNotifications(subsidyRes.data || []);
       setDbMessages(messagesRes.data || []);
       setDbTaskTemplates(templatesRes.data || []);
+
+      // Load vouchers for this client
+      const vouchersRes = await supabase.from('vouchers').select('id, file_name, voucher_type, fiscal_year, uploaded_at, storage_provider, storage_path').eq('client_id', clientId).order('uploaded_at', { ascending: false });
+      setDbVouchers(vouchersRes.data || []);
 
       // Load tasks for this client
       const tasksRes = await supabase.from('tasks').select('*, staff:assigned_to(id, name)').eq('client_id', clientId).order('due_date');
@@ -722,6 +742,76 @@ export default function ClientsPage() {
         alert('\u66F4\u65B0\u306B\u5931\u6557\u3057\u307E\u3057\u305F');
       }
     }
+  };
+
+  // Voucher upload handler
+  const handleVoucherUpload = async (files: FileList | File[]) => {
+    if (!selectedClient || files.length === 0) return;
+    setUploading(true);
+    setUploadError(null);
+    const currentYear = new Date().getFullYear();
+
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('client_id', selectedClient.id);
+        formData.append('voucher_type', uploadVoucherType);
+        formData.append('fiscal_year', String(currentYear));
+
+        const res = await fetch('/api/vouchers/upload', { method: 'POST', body: formData });
+        const json = await res.json();
+        if (!res.ok) {
+          setUploadError(json.error || 'Upload failed');
+          return;
+        }
+      }
+
+      // Reload vouchers list
+      if (supabase) {
+        const { data } = await supabase.from('vouchers').select('id, file_name, voucher_type, fiscal_year, uploaded_at, storage_provider, storage_path').eq('client_id', selectedClient.id).order('uploaded_at', { ascending: false });
+        if (data) setDbVouchers(data);
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleVoucherDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setUploadDragOver(false);
+    if (e.dataTransfer.files.length > 0) {
+      handleVoucherUpload(e.dataTransfer.files);
+    }
+  };
+
+  const handleVoucherDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setUploadDragOver(true);
+  };
+
+  const handleVoucherDragLeave = () => {
+    setUploadDragOver(false);
+  };
+
+  const handleVoucherFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleVoucherUpload(e.target.files);
+      e.target.value = '';
+    }
+  };
+
+  const voucherTypeLabels: Record<string, string> = {
+    receipt: '\u9818\u53CE\u66F8',
+    invoice: '\u8ACB\u6C42\u66F8',
+    bank_statement: '\u9280\u884C\u660E\u7D30',
+    credit_card: '\u30AF\u30EC\u30AB\u660E\u7D30',
+    settlement: '\u6C7A\u7B97\u66F8\u985E',
+    tax_return: '\u7A0E\u52D9\u7533\u544A\u66F8',
+    contract: '\u5951\u7D04\u66F8',
+    other: '\u305D\u306E\u4ED6',
   };
 
   // Client form modal (shared between add/edit)
@@ -1338,31 +1428,106 @@ export default function ClientsPage() {
               {activeTab === 'documents' && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-slate-700">{'\u66F8\u985E'}</h3>
+                    <h3 className="text-sm font-bold text-slate-700">{'\u66F8\u985E\u30FB\u8A3C\u6191'}</h3>
                     <div className="flex gap-2">
-                      <button className="text-xs text-slate-500 border border-slate-200 rounded px-3 py-1.5 hover:bg-slate-50">{'Google Drive\u3067\u958B\u304F'}</button>
-                      <button className="text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">{'\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u4F9D\u983C\u3092\u9001\u308B'}</button>
+                      <select
+                        value={uploadVoucherType}
+                        onChange={(e) => setUploadVoucherType(e.target.value)}
+                        className="text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#ea580c]/30"
+                      >
+                        {Object.entries(voucherTypeLabels).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
-                  {dataSource === 'supabase' && dbDocuments.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {dbDocuments.map((doc) => (
-                        <div key={doc.id} className="flex items-center gap-3 py-2.5 px-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer">
-                          <FileText className="w-4 h-4 text-slate-400" />
-                          <span className="flex-1 text-sm text-slate-700">{doc.name}</span>
-                          {doc.file_size && <span className="text-xs text-slate-400">{(doc.file_size / 1024).toFixed(0)}KB</span>}
-                          <span className="text-xs text-slate-400">{doc.created_at?.slice(0, 10)}</span>
-                          {doc.e_bookkeeping_compliant && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">{'\u96FB\u5E33\u6CD5'}</span>}
-                        </div>
-                      ))}
+
+                  {/* Drag & Drop Upload Area */}
+                  <div
+                    onDrop={handleVoucherDrop}
+                    onDragOver={handleVoucherDragOver}
+                    onDragLeave={handleVoucherDragLeave}
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                      uploadDragOver
+                        ? 'border-[#ea580c] bg-[#fff7ed]'
+                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                    }`}
+                  >
+                    {uploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-8 h-8 text-[#ea580c] animate-spin" />
+                        <p className="text-sm text-slate-500">{'\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u4E2D...'}</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                        <p className="text-sm text-slate-500 mb-1">
+                          {'\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30E9\u30C3\u30B0\uFF06\u30C9\u30ED\u30C3\u30D7\u3001\u307E\u305F\u306F'}
+                          <label className="text-[#ea580c] cursor-pointer hover:underline ml-1">
+                            {'\u30D5\u30A1\u30A4\u30EB\u3092\u9078\u629E'}
+                            <input
+                              type="file"
+                              multiple
+                              accept=".pdf,.jpg,.jpeg,.png,.xlsx,.csv"
+                              onChange={handleVoucherFileSelect}
+                              className="hidden"
+                            />
+                          </label>
+                        </p>
+                        <p className="text-xs text-slate-400">PDF, JPG, PNG, Excel (10MB{'\u4EE5\u4E0B'})</p>
+                      </>
+                    )}
+                  </div>
+
+                  {uploadError && (
+                    <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-600">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      <span>{uploadError}</span>
+                      <button onClick={() => setUploadError(null)} className="ml-auto text-red-400 hover:text-red-600">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                  ) : dataSource === 'supabase' ? (
-                    <div className="text-center py-12 text-slate-400">
-                      <FolderOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">{'\u307E\u3060\u66F8\u985E\u304C\u3042\u308A\u307E\u305B\u3093'}</p>
-                      <button className="mt-2 text-xs text-[#ea580c] border border-[#ea580c] rounded px-3 py-1.5 hover:bg-[#ea580c] hover:text-white transition-colors">+ {'\u66F8\u985E\u3092\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9'}</button>
+                  )}
+
+                  {/* Voucher File List */}
+                  {dbVouchers.length > 0 ? (
+                    <div>
+                      <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">{'\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u6E08\u307F\u8A3C\u6191'} ({dbVouchers.length})</h4>
+                      <div className="space-y-1.5">
+                        {dbVouchers.map((v) => (
+                          <div key={v.id} className="flex items-center gap-3 py-2.5 px-3 bg-slate-50 rounded-lg hover:bg-slate-100 group">
+                            <FileText className="w-4 h-4 text-slate-400" />
+                            <span className="flex-1 text-sm text-slate-700 truncate">{v.file_name || '(unknown)'}</span>
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-500">
+                              {voucherTypeLabels[v.voucher_type] || v.voucher_type}
+                            </span>
+                            {v.fiscal_year && <span className="text-xs text-slate-400">{v.fiscal_year}</span>}
+                            <span className="text-xs text-slate-400">{v.uploaded_at?.slice(0, 10) || '-'}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                              v.storage_provider === 'google-drive' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
+                            }`}>
+                              {v.storage_provider === 'google-drive' ? 'Drive' : 'Storage'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ) : (
+                  ) : dataSource === 'supabase' && dbDocuments.length > 0 ? (
+                    <div>
+                      <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">{'\u66F8\u985E\u4E00\u89A7'}</h4>
+                      <div className="space-y-1.5">
+                        {dbDocuments.map((doc) => (
+                          <div key={doc.id} className="flex items-center gap-3 py-2.5 px-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer">
+                            <FileText className="w-4 h-4 text-slate-400" />
+                            <span className="flex-1 text-sm text-slate-700">{doc.name}</span>
+                            {doc.file_size && <span className="text-xs text-slate-400">{(doc.file_size / 1024).toFixed(0)}KB</span>}
+                            <span className="text-xs text-slate-400">{doc.created_at?.slice(0, 10)}</span>
+                            {doc.e_bookkeeping_compliant && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">{'\u96FB\u5E33\u6CD5'}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : dbVouchers.length === 0 && dbDocuments.length === 0 && dataSource !== 'supabase' ? (
                     <>
                       <div className="space-y-2">
                         {[{ name: '2025\u5E74\u5EA6', items: ['\u9818\u53CE\u66F8', '\u8ACB\u6C42\u66F8', '\u9280\u884C\u660E\u7D30', '\u30AF\u30EC\u30AB\u660E\u7D30', '\u6C7A\u7B97\u66F8\u985E'] }, { name: '2026\u5E74\u5EA6', items: ['\u9818\u53CE\u66F8', '\u8ACB\u6C42\u66F8', '\u9280\u884C\u660E\u7D30', '\u30AF\u30EC\u30AB\u660E\u7D30'] }].map((folder) => (
@@ -1377,26 +1542,8 @@ export default function ClientsPage() {
                           </div>
                         ))}
                       </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-700 mb-3">{'\u30D5\u30A1\u30A4\u30EB\u4E00\u89A7'}</h3>
-                        <div className="space-y-1.5">
-                          {[
-                            { name: '\u6C7A\u7B97\u5831\u544A\u66F8_2025.pdf', size: '2.4MB', date: '2025-06-15', compliant: true },
-                            { name: '\u6CD5\u4EBA\u7A0E\u7533\u544A\u66F8_2025.pdf', size: '1.8MB', date: '2025-06-20', compliant: true },
-                            { name: '\u6708\u6B21\u8A66\u7B97\u8868_2026_02.xlsx', size: '430KB', date: '2026-03-10', compliant: true },
-                          ].map((file) => (
-                            <div key={file.name} className="flex items-center gap-3 py-2.5 px-3 bg-slate-50 rounded-lg hover:bg-slate-100 cursor-pointer">
-                              <FileText className="w-4 h-4 text-slate-400" />
-                              <span className="flex-1 text-sm text-slate-700">{file.name}</span>
-                              <span className="text-xs text-slate-400">{file.size}</span>
-                              <span className="text-xs text-slate-400">{file.date}</span>
-                              {file.compliant && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">{'\u96FB\u5E33\u6CD5'}</span>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
                     </>
-                  )}
+                  ) : null}
                 </div>
               )}
 
