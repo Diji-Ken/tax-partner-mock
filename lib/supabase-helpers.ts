@@ -554,3 +554,240 @@ export async function updateSubsidyNotificationStatus(notificationId: string, ne
   }
   return true;
 }
+
+// ============================
+// Consultation Templates
+// ============================
+export async function fetchConsultationTemplates(): Promise<any[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('consultation_templates')
+    .select('*')
+    .eq('office_id', OFFICE_ID)
+    .eq('is_active', true)
+    .order('sort_order');
+  if (error || !data) return [];
+  return data;
+}
+
+export async function insertConsultationTemplate(template: {
+  category: string;
+  title: string;
+  description: string;
+  sortOrder: number;
+}): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('consultation_templates').insert({
+    office_id: OFFICE_ID,
+    category: template.category,
+    title: template.title,
+    description: template.description,
+    sort_order: template.sortOrder,
+  });
+  if (error) { console.error('Failed to insert consultation template:', error); return false; }
+  return true;
+}
+
+export async function updateConsultationTemplate(id: string, updates: {
+  title?: string;
+  description?: string;
+  is_active?: boolean;
+  category?: string;
+  sort_order?: number;
+}): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('consultation_templates').update(updates).eq('id', id);
+  if (error) { console.error('Failed to update consultation template:', error); return false; }
+  return true;
+}
+
+export async function deleteConsultationTemplate(id: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('consultation_templates').delete().eq('id', id);
+  if (error) { console.error('Failed to delete consultation template:', error); return false; }
+  return true;
+}
+
+// ============================
+// Consultation Records
+// ============================
+export async function fetchConsultationRecords(clientId: string): Promise<any[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('consultation_records')
+    .select('*, template:template_id(id, category, title, description, sort_order)')
+    .eq('client_id', clientId);
+  if (error || !data) return [];
+  return data;
+}
+
+export async function upsertConsultationRecord(record: {
+  clientId: string;
+  templateId: string;
+  isChecked: boolean;
+  notes?: string;
+}): Promise<boolean> {
+  if (!supabase) return false;
+  // Check if record exists
+  const { data: existing } = await supabase
+    .from('consultation_records')
+    .select('id')
+    .eq('client_id', record.clientId)
+    .eq('template_id', record.templateId)
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    const { error } = await supabase.from('consultation_records').update({
+      is_checked: record.isChecked,
+      notes: record.notes,
+      checked_at: record.isChecked ? new Date().toISOString() : null,
+    }).eq('id', existing[0].id);
+    if (error) { console.error('Failed to update consultation record:', error); return false; }
+  } else {
+    const { error } = await supabase.from('consultation_records').insert({
+      client_id: record.clientId,
+      template_id: record.templateId,
+      is_checked: record.isChecked,
+      notes: record.notes,
+      checked_at: record.isChecked ? new Date().toISOString() : null,
+    });
+    if (error) { console.error('Failed to insert consultation record:', error); return false; }
+  }
+  return true;
+}
+
+// ============================
+// Form Responses
+// ============================
+export async function fetchFormResponses(clientId: string): Promise<any[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('form_responses')
+    .select('*')
+    .eq('client_id', clientId)
+    .order('submitted_at');
+  if (error || !data) return [];
+  return data;
+}
+
+export async function submitFormResponses(responses: {
+  clientId: string;
+  templateId: string;
+  fields: { fieldId: string | null; label: string; type: string; value: string; fileUrl?: string; fileName?: string }[];
+}): Promise<boolean> {
+  if (!supabase) return false;
+  const rows = responses.fields.map((f) => ({
+    client_id: responses.clientId,
+    office_id: OFFICE_ID,
+    template_id: responses.templateId,
+    field_id: f.fieldId || null,
+    field_label: f.label,
+    field_type: f.type,
+    response_text: f.value,
+    response_file_url: f.fileUrl || null,
+    response_file_name: f.fileName || null,
+  }));
+  const { error } = await supabase.from('form_responses').insert(rows);
+  if (error) { console.error('Failed to submit form responses:', error); return false; }
+  return true;
+}
+
+export async function markFormResponseReviewed(responseId: string, staffId: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('form_responses').update({
+    reviewed_by: staffId,
+    reviewed_at: new Date().toISOString(),
+  }).eq('id', responseId);
+  if (error) { console.error('Failed to mark form response reviewed:', error); return false; }
+  return true;
+}
+
+// ============================
+// Message Templates
+// ============================
+export async function fetchMessageTemplates(): Promise<any[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('message_templates')
+    .select('*')
+    .eq('office_id', OFFICE_ID)
+    .order('template_id');
+  if (error || !data) return [];
+  return data;
+}
+
+// ============================
+// Form Fields
+// ============================
+export async function fetchFormFields(templateId: string): Promise<any[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('form_fields')
+    .select('*')
+    .eq('template_id', templateId)
+    .eq('office_id', OFFICE_ID)
+    .order('sort_order');
+  if (error || !data) return [];
+  return data;
+}
+
+// ============================
+// Task Templates (full CRUD)
+// ============================
+export async function fetchTaskTemplates(): Promise<any[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('task_templates')
+    .select('*')
+    .eq('office_id', OFFICE_ID)
+    .order('category')
+    .order('sort_order');
+  if (error || !data) return [];
+  return data;
+}
+
+export async function insertTaskTemplate(template: {
+  templateId: string;
+  category: string;
+  title: string;
+  description: string;
+  sendDayOffset?: number;
+  dueDayOffset?: number;
+  officeTodo?: string;
+  sortOrder: number;
+}): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('task_templates').insert({
+    office_id: OFFICE_ID,
+    template_id: template.templateId,
+    category: template.category,
+    title: template.title,
+    description: template.description,
+    send_day_offset: template.sendDayOffset || null,
+    due_day_offset: template.dueDayOffset || null,
+    office_todo: template.officeTodo || null,
+    sort_order: template.sortOrder,
+  });
+  if (error) { console.error('Failed to insert task template:', error); return false; }
+  return true;
+}
+
+export async function updateTaskTemplate(id: string, updates: {
+  title?: string;
+  description?: string;
+  send_day_offset?: number;
+  due_day_offset?: number;
+  office_todo?: string;
+}): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('task_templates').update(updates).eq('id', id);
+  if (error) { console.error('Failed to update task template:', error); return false; }
+  return true;
+}
+
+export async function deleteTaskTemplate(id: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('task_templates').delete().eq('id', id);
+  if (error) { console.error('Failed to delete task template:', error); return false; }
+  return true;
+}
